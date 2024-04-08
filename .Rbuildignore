@@ -1,2 +1,5 @@
+^renv$
+^renv\.lock$
 ^sqlviewer\.Rproj$
 ^\.Rproj\.user$
+^LICENSE\.md$
