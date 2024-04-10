@@ -1,0 +1,5 @@
+# devtools::load_all()
+# devtools::install()
+# remove.packages("sqlviewer")
+sqlviewer:::open("RPostgres::Postgres", dbname = "dvdrental", host = "localhost", port = 5432, user = "postgres", password = "")
+sqlviewer:::open("RSQLite::SQLite", ":memory:")
