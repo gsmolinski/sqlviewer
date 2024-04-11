@@ -1,11 +1,17 @@
 #sqlviewer_header {
   margin-top: 1%;
+  width: 100%;
+  display: inline-flex;
 }
 
 #sqlviewer_input_dark {
-  float: right;
+  margin-left: auto;
 }
 
 .reactable {
   font-size: 75%;
+}
+
+.shiny-input-container {
+  width: 40px !important;
 }
