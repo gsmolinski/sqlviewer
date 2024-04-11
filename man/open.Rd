@@ -23,7 +23,7 @@ Runs \code{shiny} application as a background job with the functionality provide
 preview SQL queries and construct complex queries using solution inspired by pipe operator.
 }
 \details{
-To establish connection with database, using \code{DBI::dbConnect()}, it is necessary to provide
+To establish connection with database using \code{DBI::dbConnect()}, it is necessary to provide
 database driver (as well as other arguments which are needed by specific driver). However,
 implementation of \code{sqlviewer} expects that driver will be provided as a character vector length 1, not
 a function call itself. Moreover, it is also necessary to provide package name along with the driver.
@@ -34,6 +34,10 @@ will be installed. In other words, if using \code{RPostgres} package, this packa
 }
 \section{Running SQL Queries}{
 
+To run SQL query, simply copy statements to clipboard and \code{sqlviewer} will run
+the code and display result as a table. You can copy more than one query at a time,
+then more than one table will be displayed. If you use labeling (see Piping section below),
+tables will be titled according to the label.
 }
 
 \section{Piping}{
@@ -42,7 +46,14 @@ will be installed. In other words, if using \code{RPostgres} package, this packa
 
 \examples{
 \dontrun{
-# install.packages("RSQLite")
-sqlviewer::open("RSQLite::SQLite", ":memory:") # use temporary, in-memory SQLite database
+temp_file <- tempfile("sqlviewerDB_example", fileext = ".db")
+conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_file)
+DBI::dbWriteTable(conn, "iris", iris)
+sqlviewer::open("duckdb::duckdb", dbdir = temp_file)
+# Now, copy SQL statement to clipboard: SELECT * FROM iris;
+# and see result in Viewer.
+# To finish, press 'STOP' button in Background Jobs pane.
+DBI::dbDisconnect(conn)
+file.remove(temp_file)
 }
 }

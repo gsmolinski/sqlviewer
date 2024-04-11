@@ -16,6 +16,7 @@ BugReports: https://github.com/gsmolinski/sqlviewer/issues
 Imports: 
     bslib,
     DBI,
+    reactable,
     rstudioapi,
     shiny
 Suggests: 

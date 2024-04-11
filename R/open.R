@@ -11,7 +11,7 @@
 #' @return
 #' Used for side effect: to run app as a background job.
 #' @details
-#' To establish connection with database, using `DBI::dbConnect()`, it is necessary to provide
+#' To establish connection with database using `DBI::dbConnect()`, it is necessary to provide
 #' database driver (as well as other arguments which are needed by specific driver). However,
 #' implementation of `sqlviewer` expects that driver will be provided as a character vector length 1, not
 #' a function call itself. Moreover, it is also necessary to provide package name along with the driver.
@@ -20,15 +20,24 @@
 #' Even that user should be provide character vector, it is expected that database package from which driver is used,
 #' will be installed. In other words, if using `RPostgres` package, this package must be installed.
 #' @section Running SQL Queries:
-#'
+#' To run SQL query, simply copy statements to clipboard and `sqlviewer` will run
+#' the code and display result as a table. You can copy more than one query at a time,
+#' then more than one table will be displayed. If you use labeling (see Piping section below),
+#' tables will be titled according to the label.
 #' @section Piping:
 #'
 #' @export
-#'
 #' @examples
 #' \dontrun{
-#' # install.packages("RSQLite")
-#' sqlviewer::open("RSQLite::SQLite", ":memory:") # use temporary, in-memory SQLite database
+#' temp_file <- tempfile("sqlviewerDB_example", fileext = ".db")
+#' conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_file)
+#' DBI::dbWriteTable(conn, "iris", iris)
+#' sqlviewer::open("duckdb::duckdb", dbdir = temp_file)
+#' # Now, copy SQL statement to clipboard: SELECT * FROM iris;
+#' # and see result in Viewer.
+#' # To finish, press 'STOP' button in Background Jobs pane.
+#' DBI::dbDisconnect(conn)
+#' file.remove(temp_file)
 #' }
 open <- function(drv, ..., app_host = "127.0.0.1", app_port = 49152) {
   check_requirements(drv, app_host, app_port)
@@ -101,8 +110,8 @@ pass_args_to_script <- function(drv, ..., temp_file, app_host, app_port, rstudio
   script_code <- readLines(system.file(package = "sqlviewer", "app", "run_app_template.R"))
   script_code[[2]] <- sub("drv = , ", paste0("drv = , ", rest_args), script_code[[2]], fixed = TRUE)
   script_code[[2]] <- sub("drv = ", paste0("drv = ", gsub('"|\\\'|\\(|\\)', "", drv, perl = TRUE), "()"), script_code[[2]], fixed = TRUE)
-  script_code[[7]] <- sub("host = ", paste0("host = ", '"', app_host, '"'), script_code[[7]], fixed = TRUE)
-  script_code[[8]] <- sub("port = ", paste0("port = ", app_port), script_code[[8]], fixed = TRUE)
+  script_code[[11]] <- sub("host = ", paste0("host = ", '"', app_host, '"'), script_code[[11]], fixed = TRUE)
+  script_code[[12]] <- sub("port = ", paste0("port = ", app_port), script_code[[12]], fixed = TRUE)
   if (rstudio_dark_theme) {
     script_code[[1]] <- sub('rstudio_theme_mode <- "light"', 'rstudio_theme_mode <- "dark"', script_code[[1]], fixed = TRUE)
   }

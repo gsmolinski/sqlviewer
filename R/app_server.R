@@ -11,6 +11,6 @@
 #' @noRd
 set_server <- function(conn) {
   function(input, output, session) {
-    onStop(function() DBI::dbDisconnect(conn))
+    tbl_preview_server("tbl_preview", conn)
   }
 }

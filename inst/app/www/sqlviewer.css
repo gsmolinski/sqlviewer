@@ -1,0 +1,11 @@
+#sqlviewer_header {
+  margin-top: 1%;
+}
+
+#sqlviewer_input_dark {
+  float: right;
+}
+
+.reactable {
+  font-size: 75%;
+}
