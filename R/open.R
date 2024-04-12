@@ -1,26 +1,30 @@
-#' Run 'sqlviewer' App
+#' Run `sqlviewer` App
 #'
 #' Runs `shiny` application as a background job with the functionality provided by `sqlviewer`:
 #' preview SQL queries and construct complex queries using solution inspired by pipe operator.
 #'
-#' @param drv database driver name *with* package name (character vector length 1), e.g. `"RPostgres::Postgres`. See Details section.
+#' @param drv database driver name *with* package name (character vector length 1), e.g. `"RPostgres::Postgres"`. See Details section.
 #' @param ... other database driver arguments passed to `[DBI::dbConnect()]`. See that function for details.
-#' @param app_host IPv4 address on which application should listen on. Defaults to `"127.0.0.1"`, i.e., localhost. Argument passed to `[shiny::shinyApp()]`.
-#' @param app_port TCP port on which application should listen on. Default to `49152`. Argument passed to `[shiny::shinyApp()]`.
+#' @param app_host IPv4 address (character vector length 1) on which application should listen on. Defaults to `"127.0.0.1"` (localhost). Argument passed to `[shiny::shinyApp()]`.
+#' @param app_port TCP port (integer vector length 1) on which application should listen on. Defaults to `49152`. Argument passed to `[shiny::shinyApp()]`.
 #'
 #' @return
 #' Used for side effect: to run app as a background job.
 #' @details
-#' To establish connection with database using `DBI::dbConnect()`, it is necessary to provide
+#' To establish connection with database using `[DBI::dbConnect()]`, it is necessary to provide
 #' database driver (as well as other arguments which are needed by specific driver). However,
 #' implementation of `sqlviewer` expects that driver will be provided as a character vector length 1, not
 #' a function call itself. Moreover, it is also necessary to provide package name along with the driver.
-#' As an example, if one would like to connect with the PostgreSQL database and use package `RPostgres` for this,
-#' then it would be necessary to pass an argument `"RPostgres::Postgres"` (notice quotation mark and lack of parenthesis).
-#' Even that user should be provide character vector, it is expected that database package from which driver is used,
-#' will be installed. In other words, if using `RPostgres` package, this package must be installed.
+#' As an example, if one would like to connect with the PostgreSQL database and use package `RPostgres` for that,
+#' then it would be necessary to pass an argument: `"RPostgres::Postgres"` (notice quotation mark indicating character vector and lack of parenthesis).
+#' Even that user should provide character vector, it is expected that database package from which driver is used,
+#' will be installed. In other words, if using `RPostgres` package (or any other database specific package), this package must be installed on machine.
+#'
+#' Currently, it is not possible to construct function which will close running background job. To close the app, one
+#' must go to 'Background Jobs' pane and press 'STOP' button or close the main R session, so all child R sessions
+#' (including background jobs) will be closed as well.
 #' @section Running SQL Queries:
-#' To run SQL query, simply copy statements to clipboard and `sqlviewer` will run
+#' To run SQL query, simply copy statements to clipboard (ensure switch input to observe clipboard is on) and `sqlviewer` will run
 #' the code and display result as a table. You can copy more than one query at a time,
 #' then more than one table will be displayed. If you use labeling (see Piping section below),
 #' tables will be titled according to the label.

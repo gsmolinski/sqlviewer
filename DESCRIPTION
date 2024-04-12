@@ -13,6 +13,7 @@ Description: In RStudio IDE one can connect to database using
 License: MIT + file LICENSE
 URL: https://github.com/gsmolinski/sqlviewer
 BugReports: https://github.com/gsmolinski/sqlviewer/issues
+Depends: R (>= 4.2.2)
 Imports: 
     bslib,
     DBI,

@@ -2,6 +2,7 @@
   margin-top: 1%;
   width: 100%;
   display: inline-flex;
+  margin-bottom: auto;
 }
 
 #sqlviewer_input_dark {

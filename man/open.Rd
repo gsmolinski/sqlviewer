@@ -2,18 +2,18 @@
 % Please edit documentation in R/open.R
 \name{open}
 \alias{open}
-\title{Run 'sqlviewer' App}
+\title{Run \code{sqlviewer} App}
 \usage{
 open(drv, ..., app_host = "127.0.0.1", app_port = 49152)
 }
 \arguments{
-\item{drv}{database driver name \emph{with} package name (character vector length 1), e.g. \verb{"RPostgres::Postgres}. See Details section.}
+\item{drv}{database driver name \emph{with} package name (character vector length 1), e.g. \code{"RPostgres::Postgres"}. See Details section.}
 
 \item{...}{other database driver arguments passed to \verb{[DBI::dbConnect()]}. See that function for details.}
 
-\item{app_host}{IPv4 address on which application should listen on. Defaults to \code{"127.0.0.1"}, i.e., localhost. Argument passed to \verb{[shiny::shinyApp()]}.}
+\item{app_host}{IPv4 address (character vector length 1) on which application should listen on. Defaults to \code{"127.0.0.1"} (localhost). Argument passed to \verb{[shiny::shinyApp()]}.}
 
-\item{app_port}{TCP port on which application should listen on. Default to \code{49152}. Argument passed to \verb{[shiny::shinyApp()]}.}
+\item{app_port}{TCP port (integer vector length 1) on which application should listen on. Defaults to \code{49152}. Argument passed to \verb{[shiny::shinyApp()]}.}
 }
 \value{
 Used for side effect: to run app as a background job.
@@ -23,18 +23,22 @@ Runs \code{shiny} application as a background job with the functionality provide
 preview SQL queries and construct complex queries using solution inspired by pipe operator.
 }
 \details{
-To establish connection with database using \code{DBI::dbConnect()}, it is necessary to provide
+To establish connection with database using \verb{[DBI::dbConnect()]}, it is necessary to provide
 database driver (as well as other arguments which are needed by specific driver). However,
 implementation of \code{sqlviewer} expects that driver will be provided as a character vector length 1, not
 a function call itself. Moreover, it is also necessary to provide package name along with the driver.
-As an example, if one would like to connect with the PostgreSQL database and use package \code{RPostgres} for this,
-then it would be necessary to pass an argument \code{"RPostgres::Postgres"} (notice quotation mark and lack of parenthesis).
-Even that user should be provide character vector, it is expected that database package from which driver is used,
-will be installed. In other words, if using \code{RPostgres} package, this package must be installed.
+As an example, if one would like to connect with the PostgreSQL database and use package \code{RPostgres} for that,
+then it would be necessary to pass an argument: \code{"RPostgres::Postgres"} (notice quotation mark indicating character vector and lack of parenthesis).
+Even that user should provide character vector, it is expected that database package from which driver is used,
+will be installed. In other words, if using \code{RPostgres} package (or any other database specific package), this package must be installed on machine.
+
+Currently, it is not possible to construct function which will close running background job. To close the app, one
+must go to 'Background Jobs' pane and press 'STOP' button or close the main R session, so all child R sessions
+(including background jobs) will be closed as well.
 }
 \section{Running SQL Queries}{
 
-To run SQL query, simply copy statements to clipboard and \code{sqlviewer} will run
+To run SQL query, simply copy statements to clipboard (ensure switch input to observe clipboard is on) and \code{sqlviewer} will run
 the code and display result as a table. You can copy more than one query at a time,
 then more than one table will be displayed. If you use labeling (see Piping section below),
 tables will be titled according to the label.
