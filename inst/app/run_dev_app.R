@@ -3,6 +3,7 @@
 # remove.packages("sqlviewer")
 # sqlviewer:::open("RPostgres::Postgres", dbname = "dvdrental", host = "localhost", port = 5432, user = "postgres", password = "")
 
+# devtools::load_all()
 # rstudio_theme_mode <- "dark"
 # connection <- DBI::dbConnect(RPostgres::Postgres(), dbname = "dvdrental", host = "localhost", port = 5432, user = "postgres", password = "nemesis3")
 #

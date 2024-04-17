@@ -3,10 +3,11 @@
 #' Runs `shiny` application as a background job with the functionality provided by `sqlviewer`:
 #' preview SQL queries and construct complex queries using solution inspired by pipe operator.
 #'
-#' @param drv database driver name *with* package name (character vector length 1), e.g. `"RPostgres::Postgres"`. See Details section.
+#' @param drv database driver name *with* package name (character vector length 1), e.g. `"RPostgres::Postgres"`. See *Details* section.
 #' @param ... other database driver arguments passed to `[DBI::dbConnect()]`. See that function for details.
 #' @param app_host IPv4 address (character vector length 1) on which application should listen on. Defaults to `"127.0.0.1"` (localhost). Argument passed to `[shiny::shinyApp()]`.
 #' @param app_port TCP port (integer vector length 1) on which application should listen on. Defaults to `49152`. Argument passed to `[shiny::shinyApp()]`.
+#' @param save_temp_path_to where to save *path* to temporary file? Defaults to `""`, meaning no saving. Argument passed to [base::cat()] to `file` parameter. See *Security* section for details.
 #'
 #' @return
 #' Used for side effect: to run app as a background job.
@@ -26,30 +27,40 @@
 #' @section Running SQL Queries:
 #' To run SQL query, simply copy statements to clipboard (ensure switch input to observe clipboard is on) and `sqlviewer` will run
 #' the code and display result as a table. You can copy more than one query at a time,
-#' then more than one table will be displayed. If you use labeling (see Piping section below),
+#' then more than one table will be displayed. If you use labeling (see *Piping* section below),
 #' tables will be titled according to the label.
 #' @section Piping:
 #'
+#' @section Security:
+#' User should be aware that password to database passed as an argument is stored
+#' in temporary file (R script) as a plain text, i.e. even if password was passed as a variable, in
+#' temporary file value of this variable will be used. This is needed to run script as
+#' background job and immediately after running background job, temporary file is removed.
+#' However, it may happen due some errors during function execution (e.g. not reaching the code line which removes
+#' file, because machine was shut down during code execution) that file won't be removed. To know where
+#' the R script was saved (to be able to remove it manually later), one can pass character vector length 1 argument to
+#' `save_temp_path_to` - temporary path will be saved there.
 #' @export
 #' @examples
 #' \dontrun{
-#' temp_file <- tempfile("sqlviewerDB_example", fileext = ".db")
-#' conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_file)
+#' temp_db <- tempfile("sqlviewerDB_example", fileext = ".db")
+#' conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
 #' DBI::dbWriteTable(conn, "iris", iris)
-#' sqlviewer::open("duckdb::duckdb", dbdir = temp_file)
+#' sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
 #' # Now, copy SQL statement to clipboard: SELECT * FROM iris;
 #' # and see result in Viewer.
 #' # To finish, press 'STOP' button in Background Jobs pane.
 #' DBI::dbDisconnect(conn)
-#' file.remove(temp_file)
+#' file.remove(temp_db)
 #' }
-open <- function(drv, ..., app_host = "127.0.0.1", app_port = 49152) {
+open <- function(drv, ..., app_host = "127.0.0.1", app_port = 49152, save_temp_path_to = "") {
   check_requirements(drv, app_host, app_port)
   temp_file <- tempfile("sqlviewer", fileext = ".R")
+  save_temporary_path(temp_file, save_temp_path_to)
   pass_args_to_script(drv, ..., temp_file = temp_file, app_host = app_host, app_port = app_port, rstudio_dark_theme = rstudioapi::getThemeInfo()$dark)
   job_id <- run_bg_job(temp_file, app_host, app_port)
-  Sys.sleep(1) # otherwise everything runs too quickly to go back to console
   file.remove(temp_file)
+  Sys.sleep(1) # otherwise everything runs too quickly to go back to console
   rstudioapi::executeCommand("activateConsole")
   message_opening(app_host, app_port)
   rstudioapi::viewer(paste0("http://", app_host, ":", app_port))
@@ -61,11 +72,12 @@ open <- function(drv, ..., app_host = "127.0.0.1", app_port = 49152) {
 #' @param drv database driver name with package name.
 #' @param app_host host on which app will be running.
 #' @param app_port port on which app will be running.
+#' @param save_temp_path_to path to where save path to temp file.
 #'
 #' @return
 #' Side effect: error or nothing.
 #' @noRd
-check_requirements <- function(drv, app_host, app_port) {
+check_requirements <- function(drv, app_host, app_port, save_temp_path_to) {
   if (!rstudioapi::isAvailable()) {
     stop("'sqlviewer' must be used inside RStudio IDE", call. = FALSE)
   }
@@ -88,6 +100,31 @@ check_requirements <- function(drv, app_host, app_port) {
 
   if (!grepl("::", drv, fixed = TRUE)) {
     stop("Argument passed to 'drv' parameter must include package name, e.g. use 'RPostgres::Postgres' instead of 'Postgres'. Make sure this package is installed on your machine.", call. = FALSE)
+  }
+
+  if (typeof(save_temp_path_to) != "character") {
+    stop("Argument passed to 'save_temp_path_to' must be of type character", .call = FALSE)
+  }
+
+  if (!missing(save_temp_path_to)) {
+    if (nchar(save_temp_path_to) == 0) {
+      stop("Argument passed to 'save_temp_path_to' must have more than one character", .call = FALSE)
+    }
+  }
+}
+
+#' Save Path To Temporary File
+#'
+#' @param temp_file path to created temporary file.
+#' @param save_temp_path_to where to save info about path to temporary file?
+#'
+#' @return
+#' Side effect: save text to file.
+#' @noRd
+save_temporary_path <- function(temp_file, save_temp_path_to) {
+  if (nchar(save_temp_path_to) > 0) {
+    cat(paste0(format(Sys.time(), usetz = TRUE), ". {sqlviewer} created temporary R script here: ", temp_file),
+               file = save_temp_path_to, sep = "\n", append = TRUE)
   }
 }
 

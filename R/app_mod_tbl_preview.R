@@ -8,7 +8,7 @@
 tbl_preview_UI <- function(id) {
   ns <- NS(id)
   tagList(
-
+    tags$div(id = ns("preview_sql"))
   )
 }
 

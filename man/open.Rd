@@ -4,16 +4,24 @@
 \alias{open}
 \title{Run \code{sqlviewer} App}
 \usage{
-open(drv, ..., app_host = "127.0.0.1", app_port = 49152)
+open(
+  drv,
+  ...,
+  app_host = "127.0.0.1",
+  app_port = 49152,
+  save_temp_path_to = ""
+)
 }
 \arguments{
-\item{drv}{database driver name \emph{with} package name (character vector length 1), e.g. \code{"RPostgres::Postgres"}. See Details section.}
+\item{drv}{database driver name \emph{with} package name (character vector length 1), e.g. \code{"RPostgres::Postgres"}. See \emph{Details} section.}
 
 \item{...}{other database driver arguments passed to \verb{[DBI::dbConnect()]}. See that function for details.}
 
 \item{app_host}{IPv4 address (character vector length 1) on which application should listen on. Defaults to \code{"127.0.0.1"} (localhost). Argument passed to \verb{[shiny::shinyApp()]}.}
 
 \item{app_port}{TCP port (integer vector length 1) on which application should listen on. Defaults to \code{49152}. Argument passed to \verb{[shiny::shinyApp()]}.}
+
+\item{save_temp_path_to}{where to save \emph{path} to temporary file? Defaults to \code{""}, meaning no saving. Argument passed to \code{\link[base:cat]{base::cat()}} to \code{file} parameter. See \emph{Security} section for details.}
 }
 \value{
 Used for side effect: to run app as a background job.
@@ -40,7 +48,7 @@ must go to 'Background Jobs' pane and press 'STOP' button or close the main R se
 
 To run SQL query, simply copy statements to clipboard (ensure switch input to observe clipboard is on) and \code{sqlviewer} will run
 the code and display result as a table. You can copy more than one query at a time,
-then more than one table will be displayed. If you use labeling (see Piping section below),
+then more than one table will be displayed. If you use labeling (see \emph{Piping} section below),
 tables will be titled according to the label.
 }
 
@@ -48,16 +56,28 @@ tables will be titled according to the label.
 
 }
 
+\section{Security}{
+
+User should be aware that password to database passed as an argument is stored
+in temporary file (R script) as a plain text, i.e. even if password was passed as a variable, in
+temporary file value of this variable will be used. This is needed to run script as
+background job and immediately after running background job, temporary file is removed.
+However, it may happen due some errors during function execution (e.g. not reaching the code line which removes
+file, because machine was shut down during code execution) that file won't be removed. To know where
+the R script was saved (to be able to remove it manually later), one can pass character vector length 1 argument to
+\code{save_temp_path_to} - temporary path will be saved there.
+}
+
 \examples{
 \dontrun{
-temp_file <- tempfile("sqlviewerDB_example", fileext = ".db")
-conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_file)
+temp_db <- tempfile("sqlviewerDB_example", fileext = ".db")
+conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
 DBI::dbWriteTable(conn, "iris", iris)
-sqlviewer::open("duckdb::duckdb", dbdir = temp_file)
+sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
 # Now, copy SQL statement to clipboard: SELECT * FROM iris;
 # and see result in Viewer.
 # To finish, press 'STOP' button in Background Jobs pane.
 DBI::dbDisconnect(conn)
-file.remove(temp_file)
+file.remove(temp_db)
 }
 }
