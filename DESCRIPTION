@@ -16,6 +16,7 @@ BugReports: https://github.com/gsmolinski/sqlviewer/issues
 Depends: R (>= 4.2.2)
 Imports: 
     bslib,
+    clipr,
     DBI,
     reactable,
     rstudioapi,

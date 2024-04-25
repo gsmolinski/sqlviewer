@@ -8,7 +8,8 @@
 tbl_preview_UI <- function(id) {
   ns <- NS(id)
   tagList(
-    tags$div(id = ns("preview_sql"))
+    tags$div(id = ns("preview_sql")),
+    textOutput(ns("test"))
   )
 }
 
@@ -20,10 +21,26 @@ tbl_preview_UI <- function(id) {
 #' @return
 #' server function
 #' @noRd
-tbl_preview_server <- function(id, conn) {
+tbl_preview_server <- function(id, conn, observe_clipboard) {
   moduleServer(
     id,
     function(input, output, session) {
+      clipboard <- reactiveVal()
+
+      observe({
+        invalidateLater(1000)
+        req(observe_clipboard())
+        current_content <- clipr::read_clip()
+        req(current_content)
+        req(grepl("--#", sub(" ", "", current_content[[1]], fixed = TRUE), fixed = TRUE))
+        if (paste(current_content, collapse = " ") != paste(clipboard(), collapse = " ")) {
+          clipboard(current_content)
+        }
+      })
+
+      output$test <- renderText({
+        clipboard()
+      })
 
     }
   )

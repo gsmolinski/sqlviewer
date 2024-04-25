@@ -25,10 +25,12 @@
 #' must go to 'Background Jobs' pane and press 'STOP' button or close the main R session, so all child R sessions
 #' (including background jobs) will be closed as well.
 #' @section Running SQL Queries:
-#' To run SQL query, simply copy statements to clipboard (ensure switch input to observe clipboard is on) and `sqlviewer` will run
-#' the code and display result as a table. You can copy more than one query at a time,
-#' then more than one table will be displayed. If you use labeling (see *Piping* section below),
-#' tables will be titled according to the label.
+#' To run SQL query, simply copy statements with labels (see *Labeling* section) to clipboard (ensure switch input to observe clipboard is on) and `sqlviewer` will run
+#' the code and display result as a table. You can copy more than one query at a time, then more than one table will be displayed.
+#' `sqlviewer` will write back to the clipboard reconstructed query or queries without label and if pipe operator was used (see *Piping* section), then
+#' query or queries composed by piped queries will be returned.
+#' @section Labeling:
+#'
 #' @section Piping:
 #'
 #' @section Security:
@@ -47,7 +49,9 @@
 #' conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
 #' DBI::dbWriteTable(conn, "iris", iris)
 #' sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
-#' # Now, copy SQL statement to clipboard: SELECT * FROM iris;
+#' # Now, copy SQL statement to clipboard: (include '-- #test' line)
+#' # -- #test
+#' # SELECT * FROM iris;
 #' # and see result in Viewer.
 #' # To finish, press 'STOP' button in Background Jobs pane.
 #' DBI::dbDisconnect(conn)
@@ -62,8 +66,8 @@ open <- function(drv, ..., app_host = "127.0.0.1", app_port = 49152, save_temp_p
   file.remove(temp_file)
   Sys.sleep(1) # otherwise everything runs too quickly to go back to console
   rstudioapi::executeCommand("activateConsole")
-  message_opening(app_host, app_port)
   rstudioapi::viewer(paste0("http://", app_host, ":", app_port))
+  message_opening(app_host, app_port)
   message_closing(job_id, temp_file)
 }
 
@@ -79,14 +83,14 @@ open <- function(drv, ..., app_host = "127.0.0.1", app_port = 49152, save_temp_p
 #' @noRd
 check_requirements <- function(drv, app_host, app_port, save_temp_path_to) {
   if (!rstudioapi::isAvailable()) {
-    stop("'sqlviewer' must be used inside RStudio IDE", call. = FALSE)
+    stop("{sqlviewer} must be used inside RStudio IDE", call. = FALSE)
   }
 
-  if (typeof(app_host) != "character") {
+  if (is.na(app_host) || typeof(app_host) != "character") {
     stop("Argument passed to 'app_host' parameter must be of type character", call. = FALSE)
   }
 
-  if (!(typeof(app_port) == "integer" | typeof(app_port) == "double")) {
+  if (is.na(app_host) || !(typeof(app_port) == "integer" || typeof(app_port) == "double")) {
     stop("Argument passed to 'app_port' parameter must be an integer", call. = FALSE)
   }
 
@@ -94,7 +98,7 @@ check_requirements <- function(drv, app_host, app_port, save_temp_path_to) {
     stop("Argument passed to 'app_port' parameter must be an integer", call. = FALSE)
   }
 
-  if (typeof(drv) != "character") {
+  if (is.na(drv) || typeof(drv) != "character") {
     stop("Argument passed to 'drv' parameter must be of type character. Did you accidentally call database driver function? Pass driver as a character with package name, e.g. 'RPostgres::Postgres' instead of RPostgres::Postgres() or Postgres()", call. = FALSE)
   }
 
@@ -102,13 +106,13 @@ check_requirements <- function(drv, app_host, app_port, save_temp_path_to) {
     stop("Argument passed to 'drv' parameter must include package name, e.g. use 'RPostgres::Postgres' instead of 'Postgres'. Make sure this package is installed on your machine.", call. = FALSE)
   }
 
-  if (typeof(save_temp_path_to) != "character") {
+  if (is.na(save_temp_path_to) || typeof(save_temp_path_to) != "character") {
     stop("Argument passed to 'save_temp_path_to' must be of type character", .call = FALSE)
   }
 
   if (!missing(save_temp_path_to)) {
     if (nchar(save_temp_path_to) == 0) {
-      stop("Argument passed to 'save_temp_path_to' must have more than one character", .call = FALSE)
+      stop("Argument passed to 'save_temp_path_to' must have at lease one character", .call = FALSE)
     }
   }
 }
@@ -172,7 +176,7 @@ run_bg_job <- function(temp_file, app_host, app_port) {
 #' Side effect: displays message.
 #' @noRd
 message_opening <- function(app_host, app_port) {
-  message("Opening: sqlviewer is running as a background job on host: ", app_host, " and port: ", app_port, ". App is displayed in Viewer pane. Visit website: http://", app_host, ":", app_port, " if you prefer web browser.\n")
+  message("Opening: {sqlviewer} is running as a background job on host: ", app_host, " and port: ", app_port, ". App is displayed in Viewer pane. Visit website: http://", app_host, ":", app_port, " if you prefer web browser.\n")
 }
 
 #' Display Message About Closing 'sqlviewer'
@@ -191,5 +195,5 @@ message_opening <- function(app_host, app_port) {
 #' job, but it also do not really close the job.
 #' @noRd
 message_closing <- function(job_id, temp_file) {
-  message("Closing: to close sqlviewer, open 'Background Jobs' pane and push the 'STOP' red button (job id: ", job_id,  ", file name: ", basename(temp_file),") or close the main R session, so the background job will be closed as well.")
+  message("Closing: to close {sqlviewer}, open 'Background Jobs' pane and push the 'STOP' red button (job id: ", job_id,  ", file name: ", basename(temp_file),") or close the main R session, so the background job will be closed as well.")
 }
