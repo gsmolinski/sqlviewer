@@ -49,9 +49,11 @@
 #' conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
 #' DBI::dbWriteTable(conn, "iris", iris)
 #' sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
-#' # Now, copy SQL statement to clipboard: (include '-- #test' line)
+#' # Now, copy SQL statement to clipboard: (with label, i.e. include '-- #test' line)
+#' #
 #' # -- #test
 #' # SELECT * FROM iris;
+#' #
 #' # and see result in Viewer.
 #' # To finish, press 'STOP' button in Background Jobs pane.
 #' DBI::dbDisconnect(conn)
