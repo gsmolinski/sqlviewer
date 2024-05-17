@@ -46,10 +46,14 @@ must go to 'Background Jobs' pane and press 'STOP' button or close the main R se
 }
 \section{Running SQL Queries}{
 
-To run SQL query, simply copy statements to clipboard (ensure switch input to observe clipboard is on) and \code{sqlviewer} will run
-the code and display result as a table. You can copy more than one query at a time,
-then more than one table will be displayed. If you use labeling (see \emph{Piping} section below),
-tables will be titled according to the label.
+To run SQL query, simply copy statements with labels (see \emph{Labeling} section) to clipboard (ensure switch input to observe clipboard is on) and \code{sqlviewer} will run
+the code and display result as a table. You can copy more than one query at a time, then more than one table will be displayed.
+\code{sqlviewer} will write back to the clipboard reconstructed query or queries without label and if pipe operator was used (see \emph{Piping} section), then
+query or queries composed by piped queries will be returned.
+}
+
+\section{Labeling}{
+
 }
 
 \section{Piping}{
@@ -74,7 +78,11 @@ temp_db <- tempfile("sqlviewerDB_example", fileext = ".db")
 conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
 DBI::dbWriteTable(conn, "iris", iris)
 sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
-# Now, copy SQL statement to clipboard: SELECT * FROM iris;
+# Now, copy SQL statement to clipboard: (i.e. include label: "-- #test")
+#
+# -- #test
+# SELECT * FROM iris;
+#
 # and see result in Viewer.
 # To finish, press 'STOP' button in Background Jobs pane.
 DBI::dbDisconnect(conn)

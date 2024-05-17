@@ -17,6 +17,7 @@ Depends: R (>= 4.2.2)
 Imports: 
     bslib,
     clipr,
+    data.table,
     DBI,
     reactable,
     rstudioapi,

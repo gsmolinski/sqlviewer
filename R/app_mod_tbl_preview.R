@@ -43,20 +43,6 @@ tbl_preview_server <- function(id, conn, observe_clipboard) {
   )
 }
 
-#' Evaluate Character Vector
-#'
-#' Check if label was provided at the first line (or first not empty line).
-#'
-#' @param current_content content to evaluate.
-#'
-#' @return
-#' Logical vector length 1.
-#' @noRd
-prepare_content_to_evaluate <- function(current_content) {
-  current_content <- gsub(" ", "", current_content, fixed = TRUE)
-  grepl("^--#", current_content[current_content != ""][[1]], perl = TRUE)
-}
-
 #' Add `reactable` Styling To Table
 #'
 #' @param tbl_data data to transform into styled table.

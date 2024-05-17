@@ -49,7 +49,7 @@
 #' conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
 #' DBI::dbWriteTable(conn, "iris", iris)
 #' sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
-#' # Now, copy SQL statement to clipboard: (with label, i.e. include '-- #test' line)
+#' # Now, copy SQL statement to clipboard: (i.e. include label: "-- #test")
 #' #
 #' # -- #test
 #' # SELECT * FROM iris;
