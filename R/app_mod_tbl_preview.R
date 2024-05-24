@@ -30,7 +30,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard) {
       observe({
         invalidateLater(1000)
         req(observe_clipboard())
-        current_content <- req(clipr::read_clip())
+        current_content <- req(suppressWarnings(clipr::read_clip())) # suppress warning if no content in clipboard
         req(prepare_content_to_evaluate(current_content))
         clipboard(current_content)
       })

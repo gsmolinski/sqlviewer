@@ -1,0 +1,15 @@
+test_that("run_query returns correct result", {
+  temp_db <- tempfile("sqlviewerDB_example", fileext = ".db")
+  conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
+  DBI::dbWriteTable(conn, "iris", iris)
+  wrong_query_syntax_result <- run_query(conn, "SELECTTTT")
+  correct_query_syntax_result <- run_query(conn, "SELECT * FROM iris")
+  DBI::dbDisconnect(conn)
+
+  expect_s3_class(wrong_query_syntax_result, "data.frame")
+  expect_s3_class(correct_query_syntax_result, "data.frame")
+  expect_true(nrow(wrong_query_syntax_result) == 1)
+  expect_true(nrow(correct_query_syntax_result) == 150)
+  expect_length(wrong_query_syntax_result, 1)
+  expect_length(correct_query_syntax_result, 5)
+})
