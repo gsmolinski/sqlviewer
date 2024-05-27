@@ -83,3 +83,17 @@ test_that("check_no_self_nested correctly finds nested queries", {
                         nested_query = c(NA, NA, NA))
   expect_true(check_no_self_nested(queries))
 })
+
+test_that("find_order_connected_queries finds connected graph with desired order", {
+  test_df_1 <- data.frame(nested_group = c(2, 2, 4),
+                          group = c(3, 4, 5))
+  test_df_2 <- data.frame(nested_query = c(4, 2, 2),
+                          group = c(5, 4, 3))
+  test_df_3 <- data.frame(nested_query = c(1, 2, 3),
+                          group = c(3, 3, 1))
+  test_df_4 <- data.frame(nested_query = c(1, 2, 3),
+                          group = c(3, 3, 4))
+  test_df_4 <- data.frame(nested_query = c(1, 3, 2, 6, 5),
+                          group = c(3, 4, 1, 7, 6))
+
+})

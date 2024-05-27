@@ -61,7 +61,7 @@ get_queries_names <- function(queries) {
 #' @return
 #' data.table with three columns:
 #' - query
-#' - group to which content belongs (but without NAs!)
+#' - group to which content belongs (and without NAs!)
 #' - nested query, i.e. what query group is nested in query in given line
 #' @import data.table
 #' @noRd
