@@ -88,13 +88,76 @@ mark_nested_queries <- function(queries_df, queries_names) {
 #' We cannot proceed if there is self nested query, so this function
 #' is intended to be used inside `shiny::req()` to stop the computation
 #' if there is nested query inside the same query.
+#' Self nested query can be simple: the same query nested in the same query;
+#' or can be recursive - we need to find both cases.
+#' To find self nested query we can switch the column order and compare with
+#' table without switched column order - if we would find duplicated, it means
+#' some queries are self nested.
 #' @return
-#' Logical vector length 1: TRUE if there is nested query inside the same
-#' query, FALSE otherwise.
+#' Logical vector length 1: TRUE if there is nested query FALSE otherwise.
 #' @noRd
 check_no_self_nested <- function(queries) {
-  only_nested_queries <- !is.na(queries$nested_query)
-  !any(queries$group[only_nested_queries] == queries$nested_query[only_nested_queries])
+  queries <- queries[, c("group", "nested_query")]
+  queries <- unique(queries[!is.na(nested_query)])
+  if (queries[, .N] > 0) {
+    queries_reverse <- queries[, c("nested_query", "group")] # switch columns
+    names(queries_reverse) <- names(queries) # switch columns
+    !any(duplicated(rbind(queries, queries_reverse))) # FALSE if at least one self nested
+  } else {
+    TRUE
+  }
+}
+
+#' Order Queries From Most Inner One To Most Outer One
+#'
+#' @param queries data.frame with queries, groups and nested queries
+#'
+#' @details
+#' queries data needs to be modified - we need different order of columns,
+#' because only this way `igraph` will construct correct graph. We also need
+#' only non missing rows for `nested_query` column, because missing rows to not
+#' construct any connected vertexes. In case there is no nested queries, we want
+#' to simply return all queries (as integers).
+#' @return
+#' Integer vector - order matters if there were nested queries, because
+#' it shows in which order we need to resolve code at first to correctly
+#' insert named sql queries.
+#' @noRd
+order_connected_queries <- function(queries) {
+  queries <- queries[, c("nested_query", "group")]
+  queries <- unique(queries)
+  queries_no_na <- queries[!is.na(nested_query)]
+  if (queries_no_na[, .N] > 0) {
+    queries_graph <- igraph::graph_from_data_frame(queries_no_na)
+    roots <- as.integer(igraph::V(queries_graph)[igraph::degree(queries_graph, mode = "in") == 0])
+    lapply(roots, order_connected_queries_helper, queries_graph = queries_graph) |>
+      unlist(use.names = FALSE)
+  } else {
+    unique(queries$group)
+  }
+}
+
+#' Find Longest Path Starting From The Root
+#'
+#' @param root from which root start from?
+#' @param queries_graph graph from queries data.frame
+#'
+#' @details
+#' We want to find longest path, because only this
+#' way we will end up with all vertexes / queries.
+#' @return
+#' Integer vector of length which depends on `igraph::all_simple_paths` returned value.
+#' @noRd
+order_connected_queries_helper <- function(root, queries_graph) {
+  igraph::all_simple_paths(queries_graph, from = root, mode = "out") |>
+    unlist(use.names = TRUE) |>
+    names() |>
+    as.integer() |>
+    unique()
+}
+
+insert_query <- function(queries_order, queries) {
+
 }
 
 #' Collapse Query Into Vector Length 1

@@ -75,25 +75,35 @@ test_that("mark_nested_queries correctly finds nested queries", {
 })
 
 test_that("check_no_self_nested correctly finds nested queries", {
-  queries <- data.frame(group = c(1, 2, 3),
+  queries <- data.table(group = c(1, 2, 3),
                         nested_query = c(NA, NA, 3))
   expect_false(check_no_self_nested(queries))
 
-  queries <- data.frame(group = c(1, 2, 3),
+  queries <- data.table(nested_query = c(1, 2, 3),
+                          group = c(2, 1, 4))
+  expect_false(check_no_self_nested(queries))
+
+  queries <- data.table(nested_query = c(1, 2, 3),
+                          group = c(3, 3, 1))
+  expect_false(check_no_self_nested(queries))
+
+  queries <- data.table(group = c(1, 2, 3),
                         nested_query = c(NA, NA, NA))
   expect_true(check_no_self_nested(queries))
 })
 
-test_that("find_order_connected_queries finds connected graph with desired order", {
-  test_df_1 <- data.frame(nested_group = c(2, 2, 4),
+test_that("order_connected_queries finds connected graph and orders them from most inner to most outer", {
+  test_df_1 <- data.table(nested_query = c(2, 2, 4),
                           group = c(3, 4, 5))
-  test_df_2 <- data.frame(nested_query = c(4, 2, 2),
+  test_df_2 <- data.table(nested_query = c(4, 2, 2),
                           group = c(5, 4, 3))
-  test_df_3 <- data.frame(nested_query = c(1, 2, 3),
-                          group = c(3, 3, 1))
-  test_df_4 <- data.frame(nested_query = c(1, 2, 3),
-                          group = c(3, 3, 4))
-  test_df_4 <- data.frame(nested_query = c(1, 3, 2, 6, 5),
+  test_df_3 <- data.table(nested_query = c(1, 3, 2, 6, 5),
                           group = c(3, 4, 1, 7, 6))
+  test_df_4 <- data.table(nested_query = c(NA, NA, NA),
+                          group = c(1, 2, 3))
 
+  expect_equal(order_connected_queries(test_df_1), c(2, 4, 5, 3))
+  expect_equal(order_connected_queries(test_df_2), c(2, 4, 5, 3))
+  expect_equal(order_connected_queries(test_df_3), c(2, 1, 3, 4, 5, 6, 7))
+  expect_equal(order_connected_queries(test_df_4), c(1, 2, 3))
 })
