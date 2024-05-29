@@ -142,18 +142,13 @@ order_connected_queries <- function(queries) {
 #' @param root from which root start from?
 #' @param queries_graph graph from queries data.frame
 #'
-#' @details
-#' We want to find longest path, because only this
-#' way we will end up with all vertexes / queries.
 #' @return
-#' Integer vector of length which depends on `igraph::all_simple_paths` returned value.
+#' Integer vector.
 #' @noRd
 order_connected_queries_helper <- function(root, queries_graph) {
-  igraph::all_simple_paths(queries_graph, from = root, mode = "out") |>
-    unlist(use.names = TRUE) |>
+  igraph::ego(queries_graph, order = igraph::diameter(queries_graph), nodes = root, mode = "out")[[1]] |>
     names() |>
-    as.integer() |>
-    unique()
+    as.integer()
 }
 
 insert_query <- function(queries_order, queries) {
