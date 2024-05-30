@@ -101,9 +101,12 @@ test_that("order_connected_queries finds connected graph and orders them from mo
                           group = c(3, 4, 1, 7, 6))
   test_df_4 <- data.table(nested_query = c(NA, NA, NA),
                           group = c(1, 2, 3))
+  test_df_5 <- data.table(nested_query = c(2, 2, NA, NA),
+                          group = c(3, 4, 2, 5))
 
   expect_equal(order_connected_queries(test_df_1), c(2, 4, 3, 5))
   expect_equal(order_connected_queries(test_df_2), c(2, 4, 3, 5))
   expect_equal(order_connected_queries(test_df_3), c(2, 1, 3, 4, 5, 6, 7))
   expect_equal(order_connected_queries(test_df_4), c(1, 2, 3))
+  expect_equal(order_connected_queries(test_df_5), c(2, 3, 4, 5))
 })

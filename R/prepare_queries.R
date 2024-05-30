@@ -124,14 +124,15 @@ check_no_self_nested <- function(queries) {
 #' insert named sql queries.
 #' @noRd
 order_connected_queries <- function(queries) {
-  queries <- queries[, c("nested_query", "group")]
-  queries <- unique(queries)
-  queries_no_na <- queries[!is.na(nested_query)]
+  queries <- queries[, c("nested_query", "group")] # this order is needed for `igraph`
+  queries <- unique(queries) # leave only unique rows
+  queries_no_na <- queries[!is.na(nested_query)] # no need to consider queries without nested queries
   if (queries_no_na[, .N] > 0) {
     queries_graph <- igraph::graph_from_data_frame(queries_no_na)
     roots <- as.integer(igraph::V(queries_graph)[igraph::degree(queries_graph, mode = "in") == 0])
-    lapply(roots, order_connected_queries_helper, queries_graph = queries_graph) |>
+    connected_queries <- lapply(roots, order_connected_queries_helper, queries_graph = queries_graph) |>
       unlist(use.names = FALSE)
+    unique(c(connected_queries, queries$group)) # add queries to tail which have no nested queries
   } else {
     unique(queries$group)
   }
