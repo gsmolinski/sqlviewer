@@ -152,8 +152,29 @@ order_connected_queries_helper <- function(root, queries_graph) {
     as.integer()
 }
 
-insert_query <- function(queries_order, queries) {
-
+#' Insert Nested Queries Into Queries And Return Full Query
+#'
+#' @param queries_order the order of queries to stick with (where to start, where to finish).
+#' @param queries queries data.table.
+#' @param queries_names vector of queries names.
+#'
+#' @details
+#' The idea is to start from the right query group and then step by step resolve nested queries.
+#' Because we need to have an access to what was resolved in previous step, we use data.table
+#' passing by reference (`set` function in this case).
+#' @return
+#' Named list with full queries.
+#' @noRd
+resolve_queries <- function(queries_order, queries, queries_names) {
+  all_resolved_queries <- vector("list", length(queries_order))
+  for (i in queries_order) {
+    prepared_query <- collapse_query(queries[queries$group == i][["query"]])
+    all_resolved_queries[[i]] <- prepared_query
+    # now, resolve nested query and go to the next query group
+    set(queries, which(queries[["nested_query"]] == i), 1L, prepared_query)
+  }
+  names(all_resolved_queries) <- queries_names
+  all_resolved_queries
 }
 
 #' Collapse Query Into Vector Length 1

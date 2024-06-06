@@ -110,3 +110,24 @@ test_that("order_connected_queries finds connected graph and orders them from mo
   expect_equal(order_connected_queries(test_df_4), c(1, 2, 3))
   expect_equal(order_connected_queries(test_df_5), c(2, 3, 4, 5))
 })
+
+test_that("resolve_queries inserts correct queries into nested objects and returns named list with full queries", {
+  sql_with_pipe <- c("-- #get_all", "SELECT *", "FROM iris;", "", "--#all_species",
+                     "SELECT i.Species", "FROM iris i;", "", "--#filtered_data", "SELECT *",
+                     "FROM iris i", "WHERE i.Species IN (", "\t\t\t\t\t-- |> all_species",
+                     "\t\t\t\t\t);", "", "-- # table1", "SELECT *", "FROM (", "\t\t-- |> all_species",
+                     ")", "", "--#another_filtered_data ",
+                     "SELECT *", "FROM iris i", "WHERE i.Species IN (", "\t\t\t\t\t-- |> table1",
+                     "\t\t\t\t\t);")
+  queries_names <- get_queries_names(sql_with_pipe)
+  queries_df <- mark_separate_queries(sql_with_pipe)
+  queries_df <- mark_nested_queries(queries_df, queries_names)
+  queries_order <- order_connected_queries(queries_df)
+  result <- resolve_queries(queries_order, queries_df, queries_names)
+
+  expect_equal(result,
+               list(get_all = "-- #get_all\nSELECT *\nFROM iris;", all_species = "--#all_species\nSELECT i.Species\nFROM iris i;",
+                    filtered_data = "--#filtered_data\nSELECT *\nFROM iris i\nWHERE i.Species IN (\n--#all_species\nSELECT i.Species\nFROM iris i;\n\t\t\t\t\t);",
+                    table1 = "-- # table1\nSELECT *\nFROM (\n--#all_species\nSELECT i.Species\nFROM iris i;\n)",
+                    another_filtered_data = "--#another_filtered_data \nSELECT *\nFROM iris i\nWHERE i.Species IN (\n-- # table1\nSELECT *\nFROM (\n--#all_species\nSELECT i.Species\nFROM iris i;\n)\n\t\t\t\t\t);"))
+})
