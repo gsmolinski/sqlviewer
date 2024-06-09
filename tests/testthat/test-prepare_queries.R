@@ -127,7 +127,7 @@ test_that("resolve_queries inserts correct queries into nested objects and retur
 
   expect_equal(result,
                list(get_all = "-- #get_all\nSELECT *\nFROM iris;", all_species = "--#all_species\nSELECT i.Species\nFROM iris i;",
-                    filtered_data = "--#filtered_data\nSELECT *\nFROM iris i\nWHERE i.Species IN (\n--#all_species\nSELECT i.Species\nFROM iris i;\n\t\t\t\t\t);",
-                    table1 = "-- # table1\nSELECT *\nFROM (\n--#all_species\nSELECT i.Species\nFROM iris i;\n)",
-                    another_filtered_data = "--#another_filtered_data \nSELECT *\nFROM iris i\nWHERE i.Species IN (\n-- # table1\nSELECT *\nFROM (\n--#all_species\nSELECT i.Species\nFROM iris i;\n)\n\t\t\t\t\t);"))
+                    filtered_data = "--#filtered_data\nSELECT *\nFROM iris i\nWHERE i.Species IN (\n\t\t\t\t\t--#all_species\n\t\t\t\t\tSELECT i.Species\n\t\t\t\t\tFROM iris i;\n\t\t\t\t\t);",
+                    table1 = "-- # table1\nSELECT *\nFROM (\n\t\t--#all_species\n\t\tSELECT i.Species\n\t\tFROM iris i;\n)",
+                    another_filtered_data = "--#another_filtered_data \nSELECT *\nFROM iris i\nWHERE i.Species IN (\n\t\t\t\t\t-- # table1\n\t\t\t\t\tSELECT *\n\t\t\t\t\tFROM (\n\t\t\t\t\t\t\t--#all_species\n\t\tSELECT i.Species\n\t\tFROM iris i;\n\t\t\t\t\t)\n\t\t\t\t\t);"))
 })

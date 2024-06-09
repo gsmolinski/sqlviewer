@@ -1,4 +1,4 @@
-# devtools::load_all()
+devtools::load_all()
 # rstudio_theme_mode <- "light"
 # temp_db <- tempfile("sqlviewerDB_example", fileext = ".db")
 # connection <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)

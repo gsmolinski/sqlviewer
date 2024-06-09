@@ -162,16 +162,26 @@ order_connected_queries_helper <- function(root, queries_graph) {
 #' The idea is to start from the right query group and then step by step resolve nested queries.
 #' Because we need to have an access to what was resolved in previous step, we use data.table
 #' passing by reference (`set` function in this case).
+#' We also want to preserve user format (i.e. number of `\t` or `\s` and because of that
+#' we need nested loop).
 #' @return
 #' Named list with full queries.
 #' @noRd
 resolve_queries <- function(queries_order, queries, queries_names) {
   all_resolved_queries <- vector("list", length(queries_order))
   for (i in queries_order) {
+    nested_query_rows <- which(queries[["nested_query"]] == i)
+    if (length(nested_query_rows) > 0) {
+      for (nested_i in nested_query_rows) {
+        # keep user format (number of \t or spaces)
+        user_format <- stringi::stri_replace_all_regex(queries[["query"]][[nested_i]], "--.+$", "")
+        prepared_query <- stringi::stri_c(user_format, queries[queries$group == i][["query"]])
+        # now, resolve nested query and go to the next query group
+        set(queries, nested_i, 1L, collapse_query(prepared_query))
+      }
+    }
     prepared_query <- collapse_query(queries[queries$group == i][["query"]])
     all_resolved_queries[[i]] <- prepared_query
-    # now, resolve nested query and go to the next query group
-    set(queries, which(queries[["nested_query"]] == i), 1L, prepared_query)
   }
   names(all_resolved_queries) <- queries_names
   all_resolved_queries
@@ -188,5 +198,5 @@ resolve_queries <- function(queries_order, queries, queries_names) {
 #' `DBI` just ignores new line.
 #' @noRd
 collapse_query <- function(query) {
-  paste0(query, collapse = "\n")
+  stringi::stri_c(query, collapse = "\n")
 }
