@@ -52,12 +52,14 @@ the code and display result as a table. You can copy more than one query at a ti
 
 \section{Labeling}{
 
-Each SQL query needs to have label (name). Label should be in their own line and have following format:
+Each SQL query needs to have label (name). Label \strong{has to be in their own line} (i.e. nothing more should exist in the same line except of intendation)
+and have following format:
 \preformatted{
 -- #label
 }
-where instead of \code{label} should be unique query name (see \emph{Example} section below or \emph{Piping} section). This name can be used later for piping and
-will be used when displaying results of queries in the app.
+where instead of \code{label} should be unique query name (see \emph{Example} section below or \emph{Piping} section). \strong{To be valid, label must be
+constructed using only: letters, numbers and underscores.}
+Label can be used later for piping and will be used when displaying results of queries in the app.
 }
 
 \section{Piping}{
@@ -76,10 +78,10 @@ WHERE i.Species IN (
    -- |> all_species
    );
 }
-Pipe operator should be used in their own line and can be read as "here put \emph{this} query". \code{sqlviewer} will analyze the
-code and insert labelled queries \emph{as-is} (query is not computed, just inserted) in the line where pipe operator was used.
-It is not necessary to write queries from top to bottom, i.e. nested labelled query can be below query into which this nested
-query will be piped.
+Pipe operator \strong{has to be in their own line} (i.e. nothing more should exist in the same line except intendation) and can be read as
+"here put \emph{this} query". \code{sqlviewer} will analyze the code and insert labelled queries \emph{as-is} (query is not computed, just inserted)
+in the line where pipe operator was used. It is not necessary to write queries from top to bottom, i.e. nested labelled query
+can be below query into which this nested query will be piped.
 }
 
 \section{App Functionality}{

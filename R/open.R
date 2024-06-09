@@ -28,12 +28,14 @@
 #' To run SQL query, simply copy statements with labels (see *Labeling* section) to clipboard (ensure switch input to observe clipboard is on) and `sqlviewer` will run
 #' the code and display result as a table. You can copy more than one query at a time, then more than one table will be displayed.
 #' @section Labeling:
-#' Each SQL query needs to have label (name). Label should be in their own line and have following format:
+#' Each SQL query needs to have label (name). Label **has to be in their own line** (i.e. nothing more should exist in the same line except of intendation)
+#' and have following format:
 #' \preformatted{
 #' -- #label
 #' }
-#' where instead of `label` should be unique query name (see *Example* section below or *Piping* section). This name can be used later for piping and
-#' will be used when displaying results of queries in the app.
+#' where instead of `label` should be unique query name (see *Example* section below or *Piping* section). **To be valid, label must be
+#' constructed using only: letters, numbers and underscores.**
+#' Label can be used later for piping and will be used when displaying results of queries in the app.
 #' @section Piping:
 #' SQL queries can be very complex, especially when using nested queries. `sqlviewer` comes with the functionality to pipe one
 #' labelled query into another query using `|>` operator. Below is an example of how to pipe one query into another query:
@@ -49,10 +51,10 @@
 #'    -- |> all_species
 #'    );
 #' }
-#' Pipe operator should be used in their own line and can be read as "here put *this* query". `sqlviewer` will analyze the
-#' code and insert labelled queries *as-is* (query is not computed, just inserted) in the line where pipe operator was used.
-#' It is not necessary to write queries from top to bottom, i.e. nested labelled query can be below query into which this nested
-#' query will be piped.
+#' Pipe operator **has to be in their own line** (i.e. nothing more should exist in the same line except intendation) and can be read as
+#' "here put *this* query". `sqlviewer` will analyze the code and insert labelled queries *as-is* (query is not computed, just inserted)
+#' in the line where pipe operator was used. It is not necessary to write queries from top to bottom, i.e. nested labelled query
+#' can be below query into which this nested query will be piped.
 #' @section App Functionality:
 #' TODO
 #' @section Security:

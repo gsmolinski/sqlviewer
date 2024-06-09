@@ -183,7 +183,7 @@ resolve_queries <- function(queries_order, queries, queries_names) {
         user_format <- stringi::stri_replace_all_regex(queries[["query"]][[nested_i]], "--.+$", "")
         prepared_query <- stringi::stri_c(user_format, queries[queries$group == i][["query"]])
         # now, resolve nested query and go to the next query group
-        set(queries, nested_i, 1L, collapse_query(prepared_query))
+        set(queries, nested_i, 1L, collapse_query(stringi::stri_replace_all_fixed(prepared_query, ";", ""))) # remove semicolon, collapse and insert
       }
     }
     prepared_query <- collapse_query(queries[queries$group == i][["query"]])
