@@ -24,7 +24,8 @@ prepare_content_to_evaluate <- function(current_content) {
 #' This function also removes completely empty lines.
 #' @noRd
 mark_separate_queries <- function(content) {
-  group <- NULL # otherwise we got warnings when cmd check
+  group <- query <- NULL
+
   queries <- data.table(query = content,
                         group = NA_integer_)
   queries[stringi::stri_detect_regex(query, "^\\s*--\\s*#\\s*[a-zA-Z0-9_]+\\s*$"),
@@ -66,7 +67,8 @@ get_queries_names <- function(queries) {
 #' @import data.table
 #' @noRd
 mark_nested_queries <- function(queries_df, queries_names) {
-  nested_query <- NULL
+  nested_query <- group <- query <- NULL
+
   pattern <- paste0(paste0("^\\s*--\\s*\\|>\\s*#?\\s*", queries_names, "\\s*$", collapse = "|"), collapse = "|")
   queries_df[is.na(group),
              nested_query := fifelse(stringi::stri_detect_regex(query, pattern),
@@ -97,6 +99,8 @@ mark_nested_queries <- function(queries_df, queries_names) {
 #' Logical vector length 1: TRUE if there is nested query FALSE otherwise.
 #' @noRd
 check_no_self_nested <- function(queries) {
+  nested_query <- NULL
+
   queries <- queries[, c("group", "nested_query")]
   queries <- unique(queries[!is.na(nested_query)])
   if (queries[, .N] > 0) {
@@ -124,6 +128,8 @@ check_no_self_nested <- function(queries) {
 #' insert named sql queries.
 #' @noRd
 order_connected_queries <- function(queries) {
+  nested_query <- NULL
+
   queries <- queries[, c("nested_query", "group")] # this order is needed for `igraph`
   queries <- unique(queries) # leave only unique rows
   queries_no_na <- queries[!is.na(nested_query)] # no need to consider queries without nested queries

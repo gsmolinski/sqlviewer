@@ -6,7 +6,7 @@
 include_dependency <- function() {
   htmltools::htmlDependency(
     name = "sqlviewer-dependency",
-    version = packageVersion("sqlviewer"),
+    version = utils::packageVersion("sqlviewer"),
     package = "sqlviewer",
     src = c(file = "app/www"),
     stylesheet = "sqlviewer.css"

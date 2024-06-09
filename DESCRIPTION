@@ -14,12 +14,13 @@ License: MIT + file LICENSE
 URL: https://github.com/gsmolinski/sqlviewer
 BugReports: https://github.com/gsmolinski/sqlviewer/issues
 Depends: 
-    R (>= 4.2.2)
+    R (>= 4.1.0)
 Imports: 
     bslib,
     clipr,
     data.table,
     DBI,
+    htmltools,
     igraph,
     reactable,
     rstudioapi,

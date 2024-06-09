@@ -105,13 +105,14 @@ temp_db <- tempfile("sqlviewerDB_example", fileext = ".db")
 conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
 DBI::dbWriteTable(conn, "iris", iris)
 sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
-# Now, copy SQL statement to clipboard (without comment signs) and include label (-- #all_data)
+# Now, copy SQL statement to clipboard (without comment signs!) and include label (-- #all_data)
 #
 # -- #all_data
 # SELECT * FROM iris;
 #
 # and see result in Viewer.
 # To finish, press 'STOP' button in Background Jobs pane.
+DBI::dbDisconnect(conn)
 file.remove(temp_db)
 }
 }
