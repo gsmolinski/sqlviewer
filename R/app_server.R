@@ -13,5 +13,8 @@ set_server <- function(conn) {
   function(input, output, session) {
     tbl_preview_server("tbl_preview", conn,
                        observe_clipboard = reactive({input$observe_clipboard}))
+    onStop(function() {
+      DBI::dbDisconnect(conn)
+    })
   }
 }

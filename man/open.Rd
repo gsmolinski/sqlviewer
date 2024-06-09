@@ -48,16 +48,43 @@ must go to 'Background Jobs' pane and press 'STOP' button or close the main R se
 
 To run SQL query, simply copy statements with labels (see \emph{Labeling} section) to clipboard (ensure switch input to observe clipboard is on) and \code{sqlviewer} will run
 the code and display result as a table. You can copy more than one query at a time, then more than one table will be displayed.
-\code{sqlviewer} will write back to the clipboard reconstructed query or queries without label and if pipe operator was used (see \emph{Piping} section), then
-query or queries composed by piped queries will be returned.
 }
 
 \section{Labeling}{
 
+Each SQL query needs to have label (name). Label should be in their own line and have following format:
+\preformatted{
+-- #label
+}
+where instead of \code{label} should be unique query name (see \emph{Example} section below or \emph{Piping} section). This name can be used later for piping and
+will be used when displaying results of queries in the app.
 }
 
 \section{Piping}{
 
+SQL queries can be very complex, especially when using nested queries. \code{sqlviewer} comes with the functionality to pipe one
+labelled query into another query using \verb{|>} operator. Below is an example of how to pipe one query into another query:
+\preformatted{
+--#all_species
+SELECT i.Species
+FROM iris i;
+
+--#filtered_data
+SELECT *
+FROM iris i
+WHERE i.Species IN (
+   -- |> all_species
+   );
+}
+Pipe operator should be used in their own line and can be read as "here put \emph{this} query". \code{sqlviewer} will analyze the
+code and insert labelled queries \emph{as-is} (query is not computed, just inserted) in the line where pipe operator was used.
+It is not necessary to write queries from top to bottom, i.e. nested labelled query can be below query into which this nested
+query will be piped.
+}
+
+\section{App Functionality}{
+
+TODO
 }
 
 \section{Security}{
@@ -66,10 +93,10 @@ User should be aware that password to database passed as an argument is stored
 in temporary file (R script) as a plain text, i.e. even if password was passed as a variable, in
 temporary file value of this variable will be used. This is needed to run script as
 background job and immediately after running background job, temporary file is removed.
-However, it may happen due some errors during function execution (e.g. not reaching the code line which removes
+However, it may happen due to some errors during function execution (e.g. not reaching the code line which removes
 file, because machine was shut down during code execution) that file won't be removed. To know where
 the R script was saved (to be able to remove it manually later), one can pass character vector length 1 argument to
-\code{save_temp_path_to} - temporary path will be saved there.
+\code{save_temp_path_to} parameter - temporary path will be saved there.
 }
 
 \examples{
@@ -78,14 +105,13 @@ temp_db <- tempfile("sqlviewerDB_example", fileext = ".db")
 conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
 DBI::dbWriteTable(conn, "iris", iris)
 sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
-# Now, copy SQL statement to clipboard: (i.e. include label: "-- #test")
+# Now, copy SQL statement to clipboard (without comment signs) and include label (-- #all_data)
 #
-# -- #test
+# -- #all_data
 # SELECT * FROM iris;
 #
 # and see result in Viewer.
 # To finish, press 'STOP' button in Background Jobs pane.
-DBI::dbDisconnect(conn)
 file.remove(temp_db)
 }
 }
