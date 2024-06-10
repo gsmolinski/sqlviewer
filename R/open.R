@@ -28,7 +28,7 @@
 #' To run SQL query, simply copy statements with labels (see *Labeling* section) to clipboard (ensure switch input to observe clipboard is on) and `sqlviewer` will run
 #' the code and display result as a table. You can copy more than one query at a time, then more than one table will be displayed.
 #' @section Labeling:
-#' Each SQL query needs to have label (name). Label **has to be in their own line** (i.e. nothing more should exist in the same line except of intendation)
+#' Each SQL query needs to have label (name). Label **has to be in its own line** (i.e. nothing more should exist in the same line except of intendation)
 #' and have following format:
 #' \preformatted{
 #' -- #label
@@ -51,7 +51,7 @@
 #'    -- |> all_species
 #'    );
 #' }
-#' Pipe operator **has to be in their own line** (i.e. nothing more should exist in the same line except intendation) and can be read as
+#' Pipe operator **has to be in its own line** (i.e. nothing more should exist in the same line except intendation) and can be read as
 #' "here put *this* query". `sqlviewer` will analyze the code and insert labelled queries *as-is* (query is not computed, just inserted)
 #' in the line where pipe operator was used. It is not necessary to write queries from top to bottom, i.e. nested labelled query
 #' can be below query into which this nested query will be piped.

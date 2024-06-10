@@ -9,7 +9,7 @@ tbl_preview_UI <- function(id) {
   ns <- NS(id)
   tagList(
     tags$div(id = ns("preview_sql")),
-    textOutput(ns("test"))
+    reactable::reactableOutput(ns("tables"))
   )
 }
 
@@ -35,8 +35,26 @@ tbl_preview_server <- function(id, conn, observe_clipboard) {
         clipboard(current_content)
       })
 
-      output$test <- renderText({
-        clipboard()
+      queries <- reactive({
+        req(clipboard())
+        queries_names <- get_queries_names(clipboard())
+        queries_tbl <- mark_separate_queries(clipboard())
+        queries_tbl <- mark_nested_queries(queries_tbl, queries_names)
+        queries_order <- order_connected_queries(queries_tbl)
+        resolve_queries(queries_order, queries_tbl, queries_names)
+      })
+
+      output$tables <- reactable::renderReactable({
+        req(queries())
+        reactable::reactable(data.frame(query = names(queries())),
+                             details = function(values) {
+                               display_tbl(run_query(conn, queries()[[values]]))
+                             },
+                             compact = TRUE,
+                             wrap = FALSE,
+                             outlined = FALSE,
+                             highlight = TRUE,
+                             pagination = FALSE)
       })
 
     }
