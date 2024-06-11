@@ -28,6 +28,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
     id,
     function(input, output, session) {
       clipboard <- reactiveVal()
+      queries <- reactiveValues()
 
       observe({
         invalidateLater(1000)
@@ -37,20 +38,22 @@ tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
         clipboard(current_content)
       })
 
-      queries <- reactive({
-        req(clipboard())
+      observe({
+        req(clipboard)
         queries_names <- get_queries_names(clipboard())
         queries_tbl <- mark_separate_queries(clipboard())
         queries_tbl <- mark_nested_queries(queries_tbl, queries_names)
         queries_order <- order_connected_queries(queries_tbl)
-        resolve_queries(queries_order, queries_tbl, queries_names)
+        resolved_queries <- resolve_queries(queries_order, queries_tbl, queries_names)
+        # insert queries into reactiveValues `queries` and make it named
+        purrr::walk(names(resolved_queries), \(e) `<-`(queries[[e]], resolved_queries[[e]]))
       })
 
       output$tables <- reactable::renderReactable({
-        req(queries())
-        reactable::reactable(data.frame(query = names(queries())),
-                             details = function(values) {
-                               display_tbl(run_query(conn, queries()[[values]]),
+        queries_labels <- sort(names(queries))
+        reactable::reactable(data.frame(query = queries_labels),
+                             details = function(index) {
+                               display_tbl(run_query(conn, queries[[queries_labels[[index]]]]),
                                            color_theme = add_reactable_theme(color_mode()))
                              },
                              theme = add_reactable_theme(color_mode()),
@@ -58,7 +61,10 @@ tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
                              wrap = FALSE,
                              outlined = FALSE,
                              highlight = TRUE,
-                             pagination = FALSE)
+                             pagination = FALSE,
+                             language = reactable::reactableLang(
+                               noData = ""
+                             ))
       })
 
     }
