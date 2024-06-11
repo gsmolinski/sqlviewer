@@ -17,11 +17,13 @@ tbl_preview_UI <- function(id) {
 #'
 #' @param id module id.
 #' @param conn connection to database.
+#' @param observe_clipboard reactive input TRUE/FALSE: should we observe clipboard?
+#' @param color_mode light or dark mode.
 #'
 #' @return
 #' server function
 #' @noRd
-tbl_preview_server <- function(id, conn, observe_clipboard) {
+tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -48,8 +50,10 @@ tbl_preview_server <- function(id, conn, observe_clipboard) {
         req(queries())
         reactable::reactable(data.frame(query = names(queries())),
                              details = function(values) {
-                               display_tbl(run_query(conn, queries()[[values]]))
+                               display_tbl(run_query(conn, queries()[[values]]),
+                                           color_theme = add_reactable_theme(color_mode()))
                              },
+                             theme = add_reactable_theme(color_mode()),
                              compact = TRUE,
                              wrap = FALSE,
                              outlined = FALSE,
@@ -64,12 +68,14 @@ tbl_preview_server <- function(id, conn, observe_clipboard) {
 #' Add `reactable` Styling To Table
 #'
 #' @param tbl_data data to transform into styled table.
+#' @param color_theme theme from `add_reactable_theme` function.
 #'
 #' @return
 #' `reactable` object.
 #' @noRd
-display_tbl <- function(tbl_data) {
+display_tbl <- function(tbl_data, color_theme) {
   reactable::reactable(tbl_data,
+                       theme = color_theme,
                        compact = TRUE,
                        wrap = FALSE,
                        borderless = TRUE,
@@ -81,4 +87,41 @@ display_tbl <- function(tbl_data) {
                          pagePreviousLabel = "Previous page",
                          pageNextLabel = "Next page"
                        ))
+}
+
+#' Set Theme For `reactable` Table
+#'
+#' @param color_mode light or dark mode.
+#'
+#' @return
+#' reactable object to set theme for table.
+#' @noRd
+add_reactable_theme <- function(color_mode) {
+  backgroundColor <- NULL
+  color <- NULL
+  borderColor <- NULL
+  highlightColor <- NULL
+  inputStyle <- NULL
+  pageButtonHoverStyle <- NULL
+  pageButtonActiveStyle <- NULL
+
+  if (color_mode == "dark") {
+    backgroundColor <- "#1D1F21"
+    color <- "hsl(233, 9%, 87%)"
+    borderColor <- "hsl(233, 9%, 22%)"
+    highlightColor <- "hsl(233, 12%, 24%)"
+    inputStyle <- list(backgroundColor = "hsl(233, 9%, 25%)")
+    pageButtonHoverStyle <- list(backgroundColor = "hsl(233, 9%, 25%)")
+    pageButtonActiveStyle <- list(backgroundColor = "hsl(233, 9%, 28%)")
+  }
+
+  reactable::reactableTheme(
+    color = color,
+    backgroundColor = backgroundColor,
+    borderColor = borderColor,
+    highlightColor = highlightColor,
+    inputStyle = inputStyle,
+    pageButtonHoverStyle = pageButtonHoverStyle,
+    pageButtonActiveStyle = pageButtonActiveStyle
+  )
 }

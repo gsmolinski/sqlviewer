@@ -20,7 +20,7 @@ set_ui <- function(rstudio_theme_mode) {
     tags$div(id = "sqlviewer_header",
       input_switch("observe_clipboard", NULL, value = TRUE) |>
         tooltip("Observe clipboard?", placement = "right"),
-      input_dark_mode(mode = rstudio_theme_mode, id = "sqlviewer_input_dark")
+      input_dark_mode(mode = rstudio_theme_mode, id = "sqlviewer_color_mode")
       ),
     tbl_preview_UI("tbl_preview")
   )
