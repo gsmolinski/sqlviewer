@@ -69,7 +69,7 @@ get_queries_names <- function(queries) {
 mark_nested_queries <- function(queries_df, queries_names) {
   nested_query <- group <- query <- NULL
 
-  pattern <- paste0(paste0("^\\s*--\\s*\\|>\\s*#?\\s*", queries_names, "\\s*$", collapse = "|"), collapse = "|")
+  pattern <- stringi::stri_c(stringi::stri_c("^\\s*--\\s*\\|>\\s*#?\\s*", queries_names, "\\s*$", collapse = "|"), collapse = "|")
   queries_df[is.na(group),
              nested_query := fifelse(stringi::stri_detect_regex(query, pattern),
                                      stringi::stri_replace_all_regex(query, "-|>|#|\\s|\\|", ""),

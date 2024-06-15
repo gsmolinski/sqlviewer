@@ -46,7 +46,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
         queries_order <- order_connected_queries(queries_tbl)
         resolved_queries <- resolve_queries(queries_order, queries_tbl, queries_names)
         # insert queries into reactiveValues `queries` and make it named
-        purrr::walk(names(resolved_queries), \(e) `<-`(queries[[e]], resolved_queries[[e]]))
+        invisible(lapply(names(resolved_queries), \(e) `<-`(queries[[e]], resolved_queries[[e]])))
       })
 
       output$tables <- reactable::renderReactable({
@@ -56,12 +56,16 @@ tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
                                display_tbl(run_query(conn, queries[[queries_labels[[index]]]]),
                                            color_theme = add_reactable_theme(color_mode()))
                              },
+                             columns = list(
+                               query = reactable::colDef(name = "")
+                             ),
                              theme = add_reactable_theme(color_mode()),
                              compact = TRUE,
                              wrap = FALSE,
                              outlined = FALSE,
                              highlight = TRUE,
                              pagination = FALSE,
+                             borderless = TRUE,
                              language = reactable::reactableLang(
                                noData = ""
                              ))
@@ -128,6 +132,9 @@ add_reactable_theme <- function(color_mode) {
     highlightColor = highlightColor,
     inputStyle = inputStyle,
     pageButtonHoverStyle = pageButtonHoverStyle,
-    pageButtonActiveStyle = pageButtonActiveStyle
+    pageButtonActiveStyle = pageButtonActiveStyle,
+    headerStyle = list(
+      borderWidth = "1px"
+    )
   )
 }
