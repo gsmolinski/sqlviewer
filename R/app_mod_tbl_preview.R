@@ -8,8 +8,7 @@
 tbl_preview_UI <- function(id) {
   ns <- NS(id)
   tagList(
-    tags$div(id = ns("preview_sql")),
-    reactable::reactableOutput(ns("tables"))
+    tags$div(id = ns("preview_sql"), class = "sqlviewer_header")
   )
 }
 
@@ -39,40 +38,91 @@ tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
       })
 
       observe({
-        req(clipboard)
         queries_names <- get_queries_names(clipboard())
         queries_tbl <- mark_separate_queries(clipboard())
         queries_tbl <- mark_nested_queries(queries_tbl, queries_names)
         queries_order <- order_connected_queries(queries_tbl)
         resolved_queries <- resolve_queries(queries_order, queries_tbl, queries_names)
+        # remove from ui, output and reactive `queries` everything from clipboard (because user decided to re-run this)
+        invisible(lapply(names(resolved_queries), rm_ui_output_reactive, queries = queries, session = session, output = output))
         # insert queries into reactiveValues `queries` and make it named
-        invisible(lapply(names(resolved_queries), \(e) `<-`(queries[[e]], resolved_queries[[e]])))
-      })
-
-      output$tables <- reactable::renderReactable({
-        queries_labels <- sort(names(queries))
-        reactable::reactable(data.frame(query = queries_labels),
-                             details = function(index) {
-                               display_tbl(run_query(conn, queries[[queries_labels[[index]]]]),
-                                           color_theme = add_reactable_theme(color_mode()))
-                             },
-                             columns = list(
-                               query = reactable::colDef(name = "")
-                             ),
-                             theme = add_reactable_theme(color_mode()),
-                             compact = TRUE,
-                             wrap = FALSE,
-                             outlined = FALSE,
-                             highlight = TRUE,
-                             pagination = FALSE,
-                             borderless = TRUE,
-                             language = reactable::reactableLang(
-                               noData = ""
-                             ))
-      })
+        invisible(lapply(sort(names(resolved_queries)), \(e) `<-`(queries[[e]][["query"]], resolved_queries[[e]])))
+        # insert UI and output only when not already inserted
+        invisible(lapply(names(queries), insert_ui_output, queries = queries, session = session, conn = conn, output = output, color_mode = color_mode))
+      }) |>
+        bindEvent(clipboard())
 
     }
   )
+}
+
+#' Insert UI, `output` Element
+#'
+#' @param queries_name names of queries.
+#' @param queries queries content (list).
+#' @param session shiny session object.
+#' @param conn connection to db.
+#' @param output shiny output object.
+#' @param color_mode app color (reactive).
+#'
+#' @return
+#' Side effect - inserts ui, inserts render function and
+#' marks reactive element as inserted.
+#' @details
+#' We need to dynamically insert UI and output, because
+#' there is no better solution to keep one query opened (we don't)
+#' want to rerender everything, because opening query is the same as
+#' computing query, so we want to keep the current state if user do not
+#' change anything. Only if user rerun query of the same name (name which
+#' already exists) or adding new query, we just want to rerender this.
+#'
+#' @noRd
+insert_ui_output <- function(queries_name, queries, session, conn, output, color_mode) {
+  if (is.null(queries[[queries_name]][["inserted"]]) || !queries[[queries_name]][["inserted"]]) {
+    #TODO put them alphabetically!
+    #TODO make sure queries names can't be duplicated! (this has to be validated in different place, not here)
+    insertUI(".sqlviewer_header", "beforeEnd",
+             ui = reactable::reactableOutput(session$ns(stringi::stri_c("tbl_", queries_name))))
+
+    output[[stringi::stri_c("tbl_", queries_name)]] <- reactable::renderReactable({
+      reactable::reactable(data.frame(query = queries_name),
+                           details = function(index) {
+                             display_tbl(run_query(conn, queries[[queries_name]][["query"]]),
+                                         color_theme = add_reactable_theme(color_mode()))
+                           },
+                           columns = list(
+                             query = reactable::colDef(name = "")
+                           ),
+                           theme = add_reactable_theme(color_mode()),
+                           compact = TRUE,
+                           wrap = FALSE,
+                           outlined = FALSE,
+                           highlight = TRUE,
+                           pagination = FALSE,
+                           borderless = TRUE,
+                           language = reactable::reactableLang(
+                             noData = ""
+                           ))
+    })
+
+    queries[[queries_name]][["inserted"]] <- TRUE
+  }
+}
+
+#' Remove Element From reactiveValues `queries`, From UI And `output`
+#'
+#' @param queries_name names of queries.
+#' @param queries queries.
+#' @param session shiny session object.
+#' @param output shiny output object.
+#'
+#' @return
+#' Side effect - removes UI, output and element from queries.
+#' @noRd
+rm_ui_output_reactive <- function(queries_name, queries, session, output) {
+  removeUI(stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", queries_name))))
+  output[[stringi::stri_c("tbl_", queries_name)]] <- NULL
+  queries[[queries_name]] <- NULL
 }
 
 #' Add `reactable` Styling To Table
