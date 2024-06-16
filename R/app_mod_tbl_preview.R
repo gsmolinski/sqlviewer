@@ -17,12 +17,11 @@ tbl_preview_UI <- function(id) {
 #' @param id module id.
 #' @param conn connection to database.
 #' @param observe_clipboard reactive input TRUE/FALSE: should we observe clipboard?
-#' @param color_mode light or dark mode.
 #'
 #' @return
 #' server function.
 #' @noRd
-tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
+tbl_preview_server <- function(id, conn, observe_clipboard) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -48,7 +47,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
         # insert queries into reactiveValues `queries` and make it named
         invisible(lapply(names(resolved_queries), \(e) `<-`(queries[[e]][["query"]], resolved_queries[[e]])))
         # insert UI and output only if not already inserted
-        invisible(lapply(names(queries), insert_ui_output, queries = queries, session = session, conn = conn, output = output, color_mode = color_mode))
+        invisible(lapply(names(queries), insert_ui_output, queries = queries, session = session, conn = conn, output = output))
       }) |>
         bindEvent(clipboard())
 
@@ -77,7 +76,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
 #' already exists) or adding new query, we just want to rerender this.
 #'
 #' @noRd
-insert_ui_output <- function(queries_name, queries, session, conn, output, color_mode) {
+insert_ui_output <- function(queries_name, queries, session, conn, output) {
   if (is.null(queries[[queries_name]][["inserted"]])) {
     insertUI(determine_selector(queries_name, queries, session), "afterEnd",
              ui = reactable::reactableOutput(session$ns(stringi::stri_c("tbl_", queries_name))))
@@ -86,12 +85,12 @@ insert_ui_output <- function(queries_name, queries, session, conn, output, color
       reactable::reactable(data.frame(query = queries_name),
                            details = function(index) {
                              display_tbl(run_query(conn, queries[[queries_name]][["query"]]),
-                                         color_theme = add_reactable_theme(color_mode()))
+                                         color_theme = add_reactable_theme())
                            },
                            columns = list(
                              query = reactable::colDef(name = "")
                            ),
-                           theme = add_reactable_theme(color_mode()),
+                           theme = add_reactable_theme(),
                            compact = TRUE,
                            wrap = FALSE,
                            outlined = FALSE,
@@ -174,35 +173,21 @@ display_tbl <- function(tbl_data, color_theme) {
 #' @return
 #' reactable object to set theme for table.
 #' @noRd
-add_reactable_theme <- function(color_mode) {
-  backgroundColor <- NULL
-  color <- NULL
-  borderColor <- NULL
-  highlightColor <- NULL
-  inputStyle <- NULL
-  pageButtonHoverStyle <- NULL
-  pageButtonActiveStyle <- NULL
-
-  if (color_mode == "dark") {
-    backgroundColor <- "#1D1F21"
-    color <- "hsl(233, 9%, 87%)"
-    borderColor <- "hsl(233, 9%, 22%)"
-    highlightColor <- "hsl(233, 12%, 24%)"
-    inputStyle <- list(backgroundColor = "hsl(233, 9%, 25%)")
-    pageButtonHoverStyle <- list(backgroundColor = "hsl(233, 9%, 25%)")
-    pageButtonActiveStyle <- list(backgroundColor = "hsl(233, 9%, 28%)")
-  }
-
+add_reactable_theme <- function() {
   reactable::reactableTheme(
-    color = color,
-    backgroundColor = backgroundColor,
-    borderColor = borderColor,
-    highlightColor = highlightColor,
-    inputStyle = inputStyle,
-    pageButtonHoverStyle = pageButtonHoverStyle,
-    pageButtonActiveStyle = pageButtonActiveStyle,
-    headerStyle = list(
-      borderWidth = "1px"
-    )
+    color = "#007BC2",
+    style = list("html[data-bs-theme='dark'] &" = list(color = "hsl(233, 9%, 87%)",
+                                                       backgroundColor = "#1D1F21",
+                                                       borderColor = "hsl(233, 9%, 22%)"),
+                 "html[data-bs-theme='light'] &" = list(color = "#242424")),
+    headerStyle = list("html[data-bs-theme='dark'] &" = list(borderColor = "hsl(233, 9%, 22%)"),
+                       borderWidth = "1px"),
+    inputStyle = list("html[data-bs-theme='dark'] &" = list(backgroundColor = "hsl(233, 9%, 25%)",
+                                                            color = "hsl(233, 9%, 87%)")),
+    rowHighlightStyle = list("html[data-bs-theme='dark'] &" = list(backgroundColor = "hsl(233, 12%, 24%)")),
+    paginationStyle = list("html[data-bs-theme='dark'] &" = list(borderColor = "hsl(233, 9%, 22%)",
+                                                                 color = "hsl(233, 9%, 87%)")),
+    pageButtonHoverStyle = list("html[data-bs-theme='dark'] &" = list(backgroundColor = "hsl(233, 9%, 25%)")),
+    pageButtonActiveStyle = list("html[data-bs-theme='dark'] &" = list(backgroundColor = "hsl(233, 9%, 28%)"))
   )
 }
