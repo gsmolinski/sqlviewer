@@ -3,7 +3,7 @@
 #' @param id module id.
 #'
 #' @return
-#' mod UI
+#' mod UI.
 #' @noRd
 tbl_preview_UI <- function(id) {
   ns <- NS(id)
@@ -20,7 +20,7 @@ tbl_preview_UI <- function(id) {
 #' @param color_mode light or dark mode.
 #'
 #' @return
-#' server function
+#' server function.
 #' @noRd
 tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
   moduleServer(
@@ -46,8 +46,8 @@ tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
         # remove from ui, output and reactive `queries` everything from clipboard (because user decided to re-run this)
         invisible(lapply(names(resolved_queries), rm_ui_output_reactive, queries = queries, session = session, output = output))
         # insert queries into reactiveValues `queries` and make it named
-        invisible(lapply(sort(names(resolved_queries)), \(e) `<-`(queries[[e]][["query"]], resolved_queries[[e]])))
-        # insert UI and output only when not already inserted
+        invisible(lapply(names(resolved_queries), \(e) `<-`(queries[[e]][["query"]], resolved_queries[[e]])))
+        # insert UI and output only if not already inserted
         invisible(lapply(names(queries), insert_ui_output, queries = queries, session = session, conn = conn, output = output, color_mode = color_mode))
       }) |>
         bindEvent(clipboard())
@@ -78,10 +78,8 @@ tbl_preview_server <- function(id, conn, observe_clipboard, color_mode) {
 #'
 #' @noRd
 insert_ui_output <- function(queries_name, queries, session, conn, output, color_mode) {
-  if (is.null(queries[[queries_name]][["inserted"]]) || !queries[[queries_name]][["inserted"]]) {
-    #TODO put them alphabetically!
-    #TODO make sure queries names can't be duplicated! (this has to be validated in different place, not here)
-    insertUI(".sqlviewer_header", "beforeEnd",
+  if (is.null(queries[[queries_name]][["inserted"]])) {
+    insertUI(determine_selector(queries_name, queries, session), "afterEnd",
              ui = reactable::reactableOutput(session$ns(stringi::stri_c("tbl_", queries_name))))
 
     output[[stringi::stri_c("tbl_", queries_name)]] <- reactable::renderReactable({
@@ -107,6 +105,26 @@ insert_ui_output <- function(queries_name, queries, session, conn, output, color
 
     queries[[queries_name]][["inserted"]] <- TRUE
   }
+}
+
+#' Determine Selector Where To Put UI
+#'
+#' @param queries_name name of actual query.
+#' @param queries queries reactive.
+#' @param session shiny session object.
+#'
+#' @return
+#' Character vector length 1 - where to put UI to keep
+#' alphabetical order of queries.
+#' @noRd
+determine_selector <- function(queries_name, queries, session) {
+  ind <- which(queries_name == sort(names(queries)))
+  if (ind == 1) {
+    selector <- ".sqlviewer_header"
+  } else {
+    selector <- stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", names(queries)[[ind - 1]])))
+  }
+  selector
 }
 
 #' Remove Element From reactiveValues `queries`, From UI And `output`
