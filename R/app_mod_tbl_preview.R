@@ -38,6 +38,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard) {
 
       observe({
         queries_names <- get_queries_names(clipboard())
+        req(check_no_duplicated_names(queries_names))
         queries_tbl <- mark_separate_queries(clipboard())
         queries_tbl <- mark_nested_queries(queries_tbl, queries_names)
         queries_order <- order_connected_queries(queries_tbl)

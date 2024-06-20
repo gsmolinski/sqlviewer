@@ -50,6 +50,21 @@ get_queries_names <- function(queries) {
     stringi::stri_replace_all_regex("-|\\s|#", "")
 }
 
+#' Check If Queries' Names Are Duplicated
+#'
+#' @param queries_names character vector of queries names.
+#'
+#' @return
+#' Logical vector length 1. Returns TRUE if no duplicated names.
+#' Otherwise - FALSE.
+#' @details
+#' We don't want duplicated names, because code is not executed
+#' from top to bottom, so we can't just overwrite one name by another.
+#' @noRd
+check_no_duplicated_names <- function(queries_names) {
+  !any((duplicated(queries_names)))
+}
+
 #' Mark What Query Group Is Nested Within Query In Given Line (Row)
 #'
 #' @param queries_df data.table returned by `mark_separate_queries`.
