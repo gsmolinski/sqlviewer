@@ -48,7 +48,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard) {
         # insert queries into reactiveValues `queries` and make it named
         invisible(lapply(names(resolved_queries), \(e) `<-`(queries[[e]][["query"]], resolved_queries[[e]])))
         # insert UI and output only if not already inserted
-        invisible(lapply(names(queries), insert_ui_output, queries = queries, session = session, conn = conn, output = output))
+        invisible(lapply(names(queries), insert_ui_output, queries = queries, session = session, conn = conn, input = input, output = output))
       }) |>
         bindEvent(clipboard())
 
@@ -77,16 +77,25 @@ tbl_preview_server <- function(id, conn, observe_clipboard) {
 #' already exists) or adding new query, we just want to rerender this.
 #'
 #' @noRd
-insert_ui_output <- function(queries_name, queries, session, conn, output) {
+insert_ui_output <- function(queries_name, queries, session, conn, input, output) {
   if (is.null(queries[[queries_name]][["inserted"]])) {
-    insertUI(determine_selector(queries_name, queries, session), "afterEnd",
-             ui = reactable::reactableOutput(session$ns(stringi::stri_c("tbl_", queries_name))))
+    selector <- determine_selector(queries_name, queries, session)
+    tbl_query_name_id <- session$ns(stringi::stri_c("tbl_", queries_name))
+    insertUI(selector, "afterEnd",
+             ui = reactable::reactableOutput(tbl_query_name_id))
 
     output[[stringi::stri_c("tbl_", queries_name)]] <- reactable::renderReactable({
       reactable::reactable(data.frame(query = queries_name),
                            details = function(index) {
-                             display_tbl(run_query(conn, queries[[queries_name]][["query"]]),
-                                         color_theme = add_reactable_theme())
+                             #layout_column_wrap(
+                               # numericInput(session$ns(stringi::stri_c(queries_name, "_offset")), NULL, NULL, min = 0) |>
+                               #   tooltip("Set offset", placement = "bottom"),
+                               # numericInput(session$ns(stringi::stri_c(queries_name, "_limit")), NULL, NULL, min = 0) |>
+                               #   tooltip("Set limit", placement = "bottom"),
+                               actionButton(session$ns(stringi::stri_c(queries_name, "_run")), "run") #|>
+                                 #tooltip("Run query", placement = "right")
+                             #)
+
                            },
                            columns = list(
                              query = reactable::colDef(name = "")
@@ -98,10 +107,19 @@ insert_ui_output <- function(queries_name, queries, session, conn, output) {
                            highlight = TRUE,
                            pagination = FALSE,
                            borderless = TRUE,
-                           language = reactable::reactableLang(
-                             noData = ""
-                           ))
+                           onClick = "expand",
+                           sortable = FALSE
+                           )
     })
+
+    insertUI(stringi::stri_c("#", tbl_query_name_id), "afterEnd",
+             ui = reactable::reactableOutput(session$ns(stringi::stri_c("tbl_", queries_name, "_result"))))
+
+    output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- reactable::renderReactable({
+      display_tbl(run_query(conn, queries[[queries_name]][["query"]]),
+                  color_theme = add_reactable_theme())
+    }) |>
+      bindEvent(input[[stringi::stri_c(queries_name, "_run")]])
 
     queries[[queries_name]][["inserted"]] <- TRUE
   }
@@ -122,7 +140,8 @@ determine_selector <- function(queries_name, queries, session) {
   if (ind == 1) {
     selector <- ".sqlviewer_header"
   } else {
-    selector <- stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", names(queries)[[ind - 1]])))
+    # "_result" at the end, because it should be inserted after the render responsible to display query result, not query name
+    selector <- stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", names(queries)[[ind - 1]], "_result")))
   }
   selector
 }
@@ -140,6 +159,8 @@ determine_selector <- function(queries_name, queries, session) {
 rm_ui_output_reactive <- function(queries_name, queries, session, output) {
   removeUI(stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", queries_name))))
   output[[stringi::stri_c("tbl_", queries_name)]] <- NULL
+  removeUI(stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", queries_name, "_result"))))
+  output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- NULL
   queries[[queries_name]] <- NULL
 }
 
