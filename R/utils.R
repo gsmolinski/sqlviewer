@@ -9,6 +9,7 @@ include_dependency <- function() {
     version = utils::packageVersion("sqlviewer"),
     package = "sqlviewer",
     src = c(file = "app/www"),
-    stylesheet = "sqlviewer.css"
+    stylesheet = "sqlviewer.css",
+    script = c("show_result.js", "hide_result.js")
   )
 }

@@ -28,6 +28,14 @@ tbl_preview_server <- function(id, conn, observe_clipboard) {
       clipboard <- reactiveVal()
       queries <- reactiveValues()
 
+      # observe({
+      #   if (!isTruthy(observe_clipboard())) {
+      #     clipboard(NULL)
+      #     invisible(lapply(names(queries), rm_ui_output_reactive, queries = queries, session = session, output = output))
+      #     queries$test1 <- NULL
+      #   }
+      # })
+
       observe({
         invalidateLater(1000)
         req(observe_clipboard())
@@ -86,19 +94,9 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
 
     output[[stringi::stri_c("tbl_", queries_name)]] <- reactable::renderReactable({
       reactable::reactable(data.frame(query = queries_name),
-                           details = function(index) {
-                             #layout_column_wrap(
-                               # numericInput(session$ns(stringi::stri_c(queries_name, "_offset")), NULL, NULL, min = 0) |>
-                               #   tooltip("Set offset", placement = "bottom"),
-                               # numericInput(session$ns(stringi::stri_c(queries_name, "_limit")), NULL, NULL, min = 0) |>
-                               #   tooltip("Set limit", placement = "bottom"),
-                               actionButton(session$ns(stringi::stri_c(queries_name, "_run")), "run") #|>
-                                 #tooltip("Run query", placement = "right")
-                             #)
-
-                           },
                            columns = list(
-                             query = reactable::colDef(name = "")
+                             query = reactable::colDef(name = ""),
+                             .selection = reactable::colDef(show = FALSE)
                            ),
                            theme = add_reactable_theme(),
                            compact = TRUE,
@@ -107,19 +105,25 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
                            highlight = TRUE,
                            pagination = FALSE,
                            borderless = TRUE,
-                           onClick = "expand",
-                           sortable = FALSE
+                           onClick = "select",
+                           selection = "single",
+                           sortable = FALSE,
                            )
     })
 
     insertUI(stringi::stri_c("#", tbl_query_name_id), "afterEnd",
-             ui = reactable::reactableOutput(session$ns(stringi::stri_c("tbl_", queries_name, "_result"))))
+             ui = reactable::reactableOutput(session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
+             )
 
     output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- reactable::renderReactable({
-      display_tbl(run_query(conn, queries[[queries_name]][["query"]]),
-                  color_theme = add_reactable_theme())
-    }) |>
-      bindEvent(input[[stringi::stri_c(queries_name, "_run")]])
+      if (isTruthy(reactable::getReactableState(stringi::stri_c("tbl_", queries_name), "selected"))) {
+        session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
+        display_tbl(run_query(conn, queries[[queries_name]][["query"]]),
+                    color_theme = add_reactable_theme())
+      } else {
+        session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
+      }
+    })
 
     queries[[queries_name]][["inserted"]] <- TRUE
   }
@@ -197,11 +201,9 @@ display_tbl <- function(tbl_data, color_theme) {
 #' @noRd
 add_reactable_theme <- function() {
   reactable::reactableTheme(
-    color = "#007BC2",
     style = list("html[data-bs-theme='dark'] &" = list(color = "hsl(233, 9%, 87%)",
                                                        backgroundColor = "#1D1F21",
-                                                       borderColor = "hsl(233, 9%, 22%)"),
-                 "html[data-bs-theme='light'] &" = list(color = "#242424")),
+                                                       borderColor = "hsl(233, 9%, 22%)")),
     headerStyle = list("html[data-bs-theme='dark'] &" = list(borderColor = "hsl(233, 9%, 22%)"),
                        borderWidth = "1px"),
     inputStyle = list("html[data-bs-theme='dark'] &" = list(backgroundColor = "hsl(233, 9%, 25%)",
@@ -210,6 +212,7 @@ add_reactable_theme <- function() {
     paginationStyle = list("html[data-bs-theme='dark'] &" = list(borderColor = "hsl(233, 9%, 22%)",
                                                                  color = "hsl(233, 9%, 87%)")),
     pageButtonHoverStyle = list("html[data-bs-theme='dark'] &" = list(backgroundColor = "hsl(233, 9%, 25%)")),
-    pageButtonActiveStyle = list("html[data-bs-theme='dark'] &" = list(backgroundColor = "hsl(233, 9%, 28%)"))
+    pageButtonActiveStyle = list("html[data-bs-theme='dark'] &" = list(backgroundColor = "hsl(233, 9%, 28%)")),
+    rowSelectedStyle = list(boxShadow = "inset 2px 0 0 0 #007BC2")
   )
 }
