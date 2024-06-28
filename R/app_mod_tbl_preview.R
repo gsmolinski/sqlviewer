@@ -28,13 +28,12 @@ tbl_preview_server <- function(id, conn, observe_clipboard) {
       clipboard <- reactiveVal()
       queries <- reactiveValues()
 
-      # observe({
-      #   if (!isTruthy(observe_clipboard())) {
-      #     clipboard(NULL)
-      #     invisible(lapply(names(queries), rm_ui_output_reactive, queries = queries, session = session, output = output))
-      #     queries$test1 <- NULL
-      #   }
-      # })
+      observe({
+        if (!isTruthy(observe_clipboard())) {
+          invisible(lapply(names(queries), rm_ui_output_reactive, queries = queries, session = session, output = output))
+          clipboard(NULL)
+        }
+      })
 
       observe({
         invalidateLater(1000)
@@ -165,7 +164,7 @@ rm_ui_output_reactive <- function(queries_name, queries, session, output) {
   output[[stringi::stri_c("tbl_", queries_name)]] <- NULL
   removeUI(stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", queries_name, "_result"))))
   output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- NULL
-  queries[[queries_name]] <- NULL
+  queries[[queries_name]][["inserted"]] <- NULL
 }
 
 #' Add `reactable` Styling To Table
