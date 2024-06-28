@@ -117,7 +117,7 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
     output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- reactable::renderReactable({
       if (isTruthy(reactable::getReactableState(stringi::stri_c("tbl_", queries_name), "selected"))) {
         session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
-        display_tbl(run_query(conn, queries[[queries_name]][["query"]]),
+        display_tbl(run_query(conn, isolate(queries[[queries_name]][["query"]])),
                     color_theme = add_reactable_theme())
       } else {
         session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
