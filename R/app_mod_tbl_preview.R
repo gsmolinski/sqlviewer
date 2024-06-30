@@ -17,11 +17,13 @@ tbl_preview_UI <- function(id) {
 #' @param id module id.
 #' @param conn connection to database.
 #' @param observe_clipboard reactive input TRUE/FALSE: should we observe clipboard?
+#' @param copy_query input from JS - query name copied by user.
+#' @param remove_query input from JS - query name to remove chosen by user.
 #'
 #' @return
 #' server function.
 #' @noRd
-tbl_preview_server <- function(id, conn, observe_clipboard) {
+tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_query) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -44,6 +46,8 @@ tbl_preview_server <- function(id, conn, observe_clipboard) {
       })
 
       observe({
+        req(clipboard())
+        browser()
         queries_names <- get_queries_names(clipboard())
         req(check_no_duplicated_names(queries_names))
         queries_tbl <- mark_separate_queries(clipboard())
@@ -58,6 +62,20 @@ tbl_preview_server <- function(id, conn, observe_clipboard) {
         invisible(lapply(names(queries), insert_ui_output, queries = queries, session = session, conn = conn, input = input, output = output))
       }) |>
         bindEvent(clipboard())
+
+      observe({
+        req(copy_query())
+        clipr::write_clip(stringi::stri_replace_all_regex(queries[[copy_query()]]$query, "^--", "--|"))
+      }) |>
+        bindEvent(copy_query())
+
+      observe({
+        browser()
+        req(remove_query())
+        rm_ui_output_reactive(remove_query(), queries, session, output)
+        clipboard(NULL)
+      }) |>
+        bindEvent(remove_query())
 
     }
   )
@@ -92,10 +110,16 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
              ui = reactable::reactableOutput(tbl_query_name_id))
 
     output[[stringi::stri_c("tbl_", queries_name)]] <- reactable::renderReactable({
-      reactable::reactable(data.frame(query = queries_name),
+      reactable::reactable(data.frame(query = queries_name,
+                                      copy = NA,
+                                      remove = NA),
                            columns = list(
                              query = reactable::colDef(name = ""),
-                             .selection = reactable::colDef(show = FALSE)
+                             .selection = reactable::colDef(show = FALSE),
+                             copy = reactable::colDef(name = "",
+                                                      cell = \() htmltools::tags$button(class = "btn", htmltools::tags$i(class = "fa-regular fa-copy"))),
+                             remove = reactable::colDef(name = "",
+                                                        cell = \() htmltools::tags$button(class = "btn", htmltools::tags$i(class = "fa fa-trash")))
                            ),
                            theme = add_reactable_theme(),
                            compact = TRUE,
@@ -104,7 +128,17 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
                            highlight = TRUE,
                            pagination = FALSE,
                            borderless = TRUE,
-                           onClick = "select",
+                           onClick = htmlwidgets::JS("
+                                                     function(rowInfo, column) {
+                                                      if (column.id === 'copy') {
+                                                        Shiny.setInputValue('copy_query', rowInfo.values['query'], {priority: 'event'})
+                                                      } else if (column.id === 'remove'){
+                                                        Shiny.setInputValue('remove_query', rowInfo.values['query'], {priority: 'event'})
+                                                      } else {
+                                                        rowInfo.toggleRowSelected();
+                                                      }
+                                                     }
+                                                     "),
                            selection = "single",
                            sortable = FALSE,
                            )

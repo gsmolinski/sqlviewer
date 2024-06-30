@@ -21,6 +21,7 @@ Imports:
     data.table,
     DBI,
     htmltools,
+    htmlwidgets,
     igraph,
     reactable,
     rstudioapi,
