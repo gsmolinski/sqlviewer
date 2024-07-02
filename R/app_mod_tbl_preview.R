@@ -32,7 +32,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
 
       observe({
         if (!isTruthy(observe_clipboard())) {
-          invisible(lapply(names(queries), rm_ui_output_reactive, queries = queries, session = session, output = output))
+          invisible(lapply(names(queries[["elements"]]), rm_ui_output_reactive, queries = queries, session = session, output = output))
           clipboard(NULL)
         }
       })
@@ -47,7 +47,6 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
 
       observe({
         req(clipboard())
-        browser()
         queries_names <- get_queries_names(clipboard())
         req(check_no_duplicated_names(queries_names))
         queries_tbl <- mark_separate_queries(clipboard())
@@ -57,20 +56,19 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         # remove from ui, output and reactive `queries` everything from clipboard (because user decided to re-run this)
         invisible(lapply(names(resolved_queries), rm_ui_output_reactive, queries = queries, session = session, output = output))
         # insert queries into reactiveValues `queries` and make it named
-        invisible(lapply(names(resolved_queries), \(e) `<-`(queries[[e]][["query"]], resolved_queries[[e]])))
+        invisible(lapply(names(resolved_queries), \(e) `<-`(queries[["elements"]][[e]][["query"]], resolved_queries[[e]])))
         # insert UI and output only if not already inserted
-        invisible(lapply(names(queries), insert_ui_output, queries = queries, session = session, conn = conn, input = input, output = output))
+        invisible(lapply(names(queries[["elements"]]), insert_ui_output, queries = queries, session = session, conn = conn, input = input, output = output))
       }) |>
         bindEvent(clipboard())
 
       observe({
         req(copy_query())
-        clipr::write_clip(stringi::stri_replace_all_regex(queries[[copy_query()]]$query, "^--", "--|"))
+        clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[copy_query()]]$query, "^--", "--|"))
       }) |>
         bindEvent(copy_query())
 
       observe({
-        browser()
         req(remove_query())
         rm_ui_output_reactive(remove_query(), queries, session, output)
         clipboard(NULL)
@@ -103,7 +101,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
 #'
 #' @noRd
 insert_ui_output <- function(queries_name, queries, session, conn, input, output) {
-  if (is.null(queries[[queries_name]][["inserted"]])) {
+  if (is.null(queries[["elements"]][[queries_name]][["inserted"]])) {
     selector <- determine_selector(queries_name, queries, session)
     tbl_query_name_id <- session$ns(stringi::stri_c("tbl_", queries_name))
     insertUI(selector, "afterEnd",
@@ -114,12 +112,16 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
                                       copy = NA,
                                       remove = NA),
                            columns = list(
-                             query = reactable::colDef(name = ""),
+                             query = reactable::colDef(name = "", align = "left"),
                              .selection = reactable::colDef(show = FALSE),
                              copy = reactable::colDef(name = "",
-                                                      cell = \() htmltools::tags$button(class = "btn", htmltools::tags$i(class = "fa-regular fa-copy"))),
+                                                      cell = \() actionButton(stringi::stri_c(queries_name, "_copy_btn"), label = NULL, icon = icon("copy"), class = "btn-sm query_name_btn"),
+                                                      align = "right",
+                                                      maxWidth = 50),
                              remove = reactable::colDef(name = "",
-                                                        cell = \() htmltools::tags$button(class = "btn", htmltools::tags$i(class = "fa fa-trash")))
+                                                        cell = \() actionButton(stringi::stri_c(queries_name, "_rm_btn"), label = NULL, icon = icon("trash"), class = "btn-sm query_name_btn"),
+                                                        align = "left",
+                                                        maxWidth = 50)
                            ),
                            theme = add_reactable_theme(),
                            compact = TRUE,
@@ -151,14 +153,14 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
     output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- reactable::renderReactable({
       if (isTruthy(reactable::getReactableState(stringi::stri_c("tbl_", queries_name), "selected"))) {
         session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
-        display_tbl(run_query(conn, isolate(queries[[queries_name]][["query"]])),
+        display_tbl(run_query(conn, isolate(queries[["elements"]][[queries_name]][["query"]])),
                     color_theme = add_reactable_theme())
       } else {
         session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
       }
     })
 
-    queries[[queries_name]][["inserted"]] <- TRUE
+    queries[["elements"]][[queries_name]][["inserted"]] <- TRUE
   }
 }
 
@@ -173,12 +175,12 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
 #' alphabetical order of queries.
 #' @noRd
 determine_selector <- function(queries_name, queries, session) {
-  ind <- which(queries_name == sort(names(queries)))
+  ind <- which(queries_name == sort(names(queries[["elements"]])))
   if (ind == 1) {
     selector <- ".sqlviewer_header"
   } else {
     # "_result" at the end, because it should be inserted after the render responsible to display query result, not query name
-    selector <- stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", names(queries)[[ind - 1]], "_result")))
+    selector <- stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", names(queries[["elements"]])[[ind - 1]], "_result")))
   }
   selector
 }
@@ -198,7 +200,7 @@ rm_ui_output_reactive <- function(queries_name, queries, session, output) {
   output[[stringi::stri_c("tbl_", queries_name)]] <- NULL
   removeUI(stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", queries_name, "_result"))))
   output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- NULL
-  queries[[queries_name]][["inserted"]] <- NULL
+  queries[["elements"]][[queries_name]] <- NULL
 }
 
 #' Add `reactable` Styling To Table
