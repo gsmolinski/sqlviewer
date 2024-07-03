@@ -33,6 +33,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       observe({
         if (!isTruthy(observe_clipboard())) {
           invisible(lapply(names(queries[["elements"]]), rm_ui_output_reactive, queries = queries, session = session, output = output))
+          # this is necessary, because otherwise queries won't be re-run if user will copy the same queries
           clipboard(NULL)
         }
       })
@@ -70,7 +71,15 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
 
       observe({
         req(remove_query())
-        rm_ui_output_reactive(remove_query(), queries, session, output)
+        # to be honest, this is necessary, because if we simply do clipboard(NULL), then everything will be re-run
+        # so if user has already copied to clipboard something which is displayed, then this will be re-run
+        # and this is not something user is expecting - so we really need to write something to clipboard
+        # what will be not correct sql statement accepted by sqlviewer - and let's say that we can "sell"
+        # this as a feature - user removes query and as a backup we write to the clipboard this query.
+        clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[remove_query()]]$query, "^--", "--|"))
+        rm_ui_output_reactive(remove_query(), queries, session, output) # now remove as user wants
+        # this is necessary, because otherwise queries are not displayed again if user rerun the same batch of queries
+        # as were before in clipboard
         clipboard(NULL)
       }) |>
         bindEvent(remove_query())
@@ -112,7 +121,9 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
                                       copy = NA,
                                       remove = NA),
                            columns = list(
-                             query = reactable::colDef(name = "", align = "left"),
+                             query = reactable::colDef(name = "", align = "left",
+                                                       vAlign = "center",
+                                                       style = "font-weight: 500"),
                              .selection = reactable::colDef(show = FALSE),
                              copy = reactable::colDef(name = "",
                                                       cell = \() actionButton(stringi::stri_c(queries_name, "_copy_btn"), label = NULL, icon = icon("copy"), class = "btn-sm query_name_btn"),
