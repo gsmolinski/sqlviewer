@@ -55,11 +55,11 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         queries_order <- order_connected_queries(queries_tbl)
         resolved_queries <- resolve_queries(queries_order, queries_tbl, queries_names)
         # remove from ui, output and reactive `queries` everything from clipboard (because user decided to re-run this)
-        invisible(lapply(names(resolved_queries), rm_ui_output_reactive, queries = queries, session = session, output = output))
+        invisible(lapply(sort(names(resolved_queries)), rm_ui_output_reactive, queries = queries, session = session, output = output))
         # insert queries into reactiveValues `queries` and make it named
-        invisible(lapply(names(resolved_queries), \(e) `<-`(queries[["elements"]][[e]][["query"]], resolved_queries[[e]])))
+        invisible(lapply(sort(names(resolved_queries)), \(e) `<-`(queries[["elements"]][[e]][["query"]], resolved_queries[[e]])))
         # insert UI and output only if not already inserted
-        invisible(lapply(names(queries[["elements"]]), insert_ui_output, queries = queries, session = session, conn = conn, input = input, output = output))
+        invisible(lapply(sort(names(queries[["elements"]])), insert_ui_output, queries = queries, session = session, conn = conn, input = input, output = output))
       }) |>
         bindEvent(clipboard())
 
