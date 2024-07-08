@@ -12,12 +12,12 @@
 #' @noRd
 set_ui <- function(rstudio_theme_mode) {
   page_fluid(
-    tags$head(
+    htmltools::tags$head(
       include_dependency()
     ),
     lang = "en",
     theme = bs_theme(5),
-    tags$div(id = "sqlviewer_header",
+    htmltools::tags$div(id = "sqlviewer_header",
       input_switch("observe_clipboard", NULL, value = TRUE),
       input_dark_mode(mode = rstudio_theme_mode, id = "sqlviewer_color_mode")
       ),

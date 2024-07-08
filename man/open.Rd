@@ -52,7 +52,7 @@ the code and display result as a table. You can copy more than one query at a ti
 
 \section{Labeling}{
 
-Each SQL query needs to have label (name). Label \strong{has to be in their own line} (i.e. nothing more should exist in the same line except of intendation)
+Each SQL query needs to have label (name). Label \strong{has to be in its own line} (i.e. nothing more should exist in the same line except of intendation)
 and have following format:
 \preformatted{
 -- #label
@@ -78,7 +78,7 @@ WHERE i.Species IN (
    -- |> all_species
    );
 }
-Pipe operator \strong{has to be in their own line} (i.e. nothing more should exist in the same line except intendation) and can be read as
+Pipe operator \strong{has to be in its own line} (i.e. nothing more should exist in the same line except intendation) and can be read as
 "here put \emph{this} query". \code{sqlviewer} will analyze the code and insert labelled queries \emph{as-is} (query is not computed, just inserted)
 in the line where pipe operator was used. It is not necessary to write queries from top to bottom, i.e. nested labelled query
 can be below query into which this nested query will be piped.
@@ -106,6 +106,7 @@ the R script was saved (to be able to remove it manually later), one can pass ch
 temp_db <- tempfile("sqlviewerDB_example", fileext = ".db")
 conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
 DBI::dbWriteTable(conn, "iris", iris)
+DBI::dbDisconnect(conn)
 sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
 # Now, copy SQL statement to clipboard (without comment signs!) and include label (-- #all_data)
 #
@@ -114,7 +115,6 @@ sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
 #
 # and see result in Viewer.
 # To finish, press 'STOP' button in Background Jobs pane.
-DBI::dbDisconnect(conn)
 file.remove(temp_db)
 }
 }

@@ -72,6 +72,7 @@
 #' temp_db <- tempfile("sqlviewerDB_example", fileext = ".db")
 #' conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
 #' DBI::dbWriteTable(conn, "iris", iris)
+#' DBI::dbDisconnect(conn)
 #' sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
 #' # Now, copy SQL statement to clipboard (without comment signs!) and include label (-- #all_data)
 #' #
@@ -80,7 +81,6 @@
 #' #
 #' # and see result in Viewer.
 #' # To finish, press 'STOP' button in Background Jobs pane.
-#' DBI::dbDisconnect(conn)
 #' file.remove(temp_db)
 #' }
 open <- function(drv, ..., app_host = "127.0.0.1", app_port = 49152, save_temp_path_to = "") {
