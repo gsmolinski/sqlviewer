@@ -65,7 +65,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
 
       observe({
         req(copy_query())
-        clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[copy_query()]]$query, "^--", "--|"))
+        clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[copy_query()]]$query, "^--", "-- |"))
       }) |>
         bindEvent(copy_query())
 
@@ -76,7 +76,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         # and this is not something user is expecting - so we really need to write something to clipboard
         # what will be not correct sql statement accepted by sqlviewer - and let's say that we can "sell"
         # this as a feature - user removes query and as a backup we write to the clipboard this query.
-        clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[remove_query()]]$query, "^--", "--|"))
+        clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[remove_query()]]$query, "^--", "-- |"))
         rm_ui_output_reactive(remove_query(), queries, session, output) # now remove as user wants
         # this is necessary, because otherwise queries are not displayed again if user rerun the same batch of queries
         # as were before in clipboard
@@ -162,7 +162,7 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
              )
 
     output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- reactable::renderReactable({
-      display_tbl(run_query(conn, isolate(queries[["elements"]][[queries_name]][["query"]])),
+      display_tbl(run_query(conn, queries[["elements"]][[queries_name]][["query"]]),
                   color_theme = add_reactable_theme())
     }) |>
       bindEvent(reactable::getReactableState(stringi::stri_c("tbl_", queries_name), "selected"))
@@ -234,6 +234,7 @@ display_tbl <- function(tbl_data, color_theme) {
                        borderless = TRUE,
                        highlight = TRUE,
                        paginationType = "jump",
+                       showPageInfo = FALSE,
                        language = reactable::reactableLang(
                          pagePrevious = "\u276e",
                          pageNext = "\u276f",

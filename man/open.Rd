@@ -67,18 +67,18 @@ Label can be used later for piping and will be used when displaying results of q
 SQL queries can be very complex, especially when using nested queries. \code{sqlviewer} comes with the functionality to pipe one
 labelled query into another query using \verb{|>} operator. Below is an example of how to pipe one query into another query:
 \preformatted{
---#all_species
+-- #all_species
 SELECT i.Species
 FROM iris i;
 
---#filtered_data
+-- #filtered_data
 SELECT *
 FROM iris i
 WHERE i.Species IN (
    -- |> all_species
    );
 }
-Pipe operator \strong{has to be in its own line} (i.e. nothing more should exist in the same line except intendation) and can be read as
+Pipe operator \strong{has to be in its own line} (i.e. nothing more should exist in the same line except indentation) and can be read as
 "here put \emph{this} query". \code{sqlviewer} will analyze the code and insert labelled queries \emph{as-is} (query is not computed, just inserted)
 in the line where pipe operator was used. It is not necessary to write queries from top to bottom, i.e. nested labelled query
 can be below query into which this nested query will be piped.
@@ -86,7 +86,12 @@ can be below query into which this nested query will be piped.
 
 \section{App Functionality}{
 
-TODO
+Switch button is used to indicate if clipboard should be observed. If set to off, then all
+existing queries will be removed and no new queries will be created. To see result for chosen query,
+click on its name. To copy query - click copy button - and to remove query, click remove button. When
+query is removed, it is also copied to clipboard.
+
+\code{sqlviewer} displays only first 1000 rows of table. If some names of queries are duplicated, then app won't run.
 }
 
 \section{Security}{
