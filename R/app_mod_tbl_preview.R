@@ -162,14 +162,7 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
              )
 
     output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- reactable::renderReactable({
-      if (is.na(queries[["elements"]][[queries_name]][["total_rows"]])) {
-        queries[["elements"]][[queries_name]][["total_rows"]] <- count_rows(conn, queries[["elements"]][[queries_name]][["query"]])
-      }
-      if (is.na(queries[["elements"]][[queries_name]][["query_with_offset"]])) {
-        queries[["elements"]][[queries_name]][["query_with_offset"]] <- sample_rows(queries[["elements"]][[queries_name]][["query"]],
-                                                                                    queries[["elements"]][[queries_name]][["total_rows"]])
-      }
-      display_tbl(run_query(conn, queries[["elements"]][[queries_name]][["query_with_offset"]]),
+      display_tbl(run_query(conn, isolate(queries[["elements"]][[queries_name]][["query"]])),
                   color_theme = add_reactable_theme())
     }) |>
       bindEvent(reactable::getReactableState(stringi::stri_c("tbl_", queries_name), "selected"))
@@ -181,8 +174,7 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
         session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
       }
     })
-    queries[["elements"]][[queries_name]][["total_rows"]] <- NA
-    queries[["elements"]][[queries_name]][["query_with_offset"]] <- NA
+
     queries[["elements"]][[queries_name]][["inserted"]] <- TRUE
   }
 }
@@ -226,7 +218,6 @@ rm_ui_output_reactive <- function(queries_name, queries, session, output) {
   queries[["elements"]][[queries_name]] <- NULL
 }
 
-
 #' Add `reactable` Styling To Table
 #'
 #' @param tbl_data data to transform into styled table.
@@ -243,7 +234,6 @@ display_tbl <- function(tbl_data, color_theme) {
                        borderless = TRUE,
                        highlight = TRUE,
                        paginationType = "jump",
-                       showPageInfo = FALSE,
                        language = reactable::reactableLang(
                          pagePrevious = "\u276e",
                          pageNext = "\u276f",
