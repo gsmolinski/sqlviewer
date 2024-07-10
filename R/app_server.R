@@ -14,6 +14,8 @@ set_server <- function(conn) {
     tbl_preview_server("tbl_preview", conn,
                        observe_clipboard = reactive({input$observe_clipboard}),
                        copy_query = reactive({input$copy_query}),
-                       remove_query = reactive({input$remove_query}))
+                       remove_query = reactive({input$remove_query}),
+                       show_result = reactive({input$show_result}),
+                       hide_result = reactive({input$hide_result}))
   }
 }

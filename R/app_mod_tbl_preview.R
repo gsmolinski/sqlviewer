@@ -19,11 +19,13 @@ tbl_preview_UI <- function(id) {
 #' @param observe_clipboard reactive input TRUE/FALSE: should we observe clipboard?
 #' @param copy_query input from JS - query name copied by user.
 #' @param remove_query input from JS - query name to remove chosen by user.
+#' @param show_result input from JS - query name for which to show result.
+#' @param hide_result input from JS - query name for which to hide result.
 #'
 #' @return
 #' server function.
 #' @noRd
-tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_query) {
+tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_query, show_result, hide_result) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -62,6 +64,14 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         invisible(lapply(sort(names(queries[["elements"]])), insert_ui_output, queries = queries, session = session, conn = conn, input = input, output = output))
       }) |>
         bindEvent(clipboard())
+
+      observe({
+        session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", show_result(), "_result")))
+      })
+
+      observe({
+        session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", hide_result(), "_result")))
+      })
 
       observe({
         req(copy_query())
@@ -148,7 +158,13 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
                                                       } else if (column.id === 'remove'){
                                                         Shiny.setInputValue('remove_query', rowInfo.values['query'], {priority: 'event'})
                                                       } else {
-                                                        rowInfo.toggleRowSelected();
+                                                        if (!rowInfo.isSelected) {
+                                                          Shiny.setInputValue('show_result', rowInfo.values['query'], {priority: 'event'});
+                                                          rowInfo.toggleRowSelected();
+                                                        } else {
+                                                          Shiny.setInputValue('hide_result', rowInfo.values['query'], {priority: 'event'});
+                                                          rowInfo.toggleRowSelected();
+                                                        }
                                                       }
                                                      }
                                                      "),
@@ -166,14 +182,6 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
                   color_theme = add_reactable_theme())
     }) |>
       bindEvent(reactable::getReactableState(stringi::stri_c("tbl_", queries_name), "selected"))
-
-    observe({
-      if (isTruthy(reactable::getReactableState(stringi::stri_c("tbl_", queries_name), "selected"))) {
-        session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
-      } else {
-        session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
-      }
-    })
 
     queries[["elements"]][[queries_name]][["inserted"]] <- TRUE
   }
