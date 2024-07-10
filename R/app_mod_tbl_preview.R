@@ -66,10 +66,12 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         bindEvent(clipboard())
 
       observe({
+        req(show_result())
         session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", show_result(), "_result")))
       })
 
       observe({
+        req(hide_result())
         session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", hide_result(), "_result")))
       })
 
