@@ -29,12 +29,14 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
   moduleServer(
     id,
     function(input, output, session) {
+
       clipboard <- reactiveVal()
       queries <- reactiveValues()
+      queries_results <- reactiveValues()
 
       observe({
         if (!isTruthy(observe_clipboard())) {
-          invisible(lapply(names(queries[["elements"]]), rm_ui_output_reactive, queries = queries, session = session, output = output))
+          invisible(lapply(names(queries[["elements"]]), rm_ui_output_reactive, queries = queries, session = session, output = output, queries_results = queries_results))
           # this is necessary, because otherwise queries won't be re-run if user will copy the same queries
           clipboard(NULL)
         }
@@ -49,7 +51,6 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       })
 
       observe({
-        req(clipboard())
         queries_names <- get_queries_names(clipboard())
         req(check_no_duplicated_names(queries_names))
         queries_tbl <- mark_separate_queries(clipboard())
@@ -57,11 +58,11 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         queries_order <- order_connected_queries(queries_tbl)
         resolved_queries <- resolve_queries(queries_order, queries_tbl, queries_names)
         # remove from ui, output and reactive `queries` everything from clipboard (because user decided to re-run this)
-        invisible(lapply(sort(names(resolved_queries)), rm_ui_output_reactive, queries = queries, session = session, output = output))
+        invisible(lapply(sort(names(resolved_queries)), rm_ui_output_reactive, queries = queries, session = session, output = output, queries_results = queries_results))
         # insert queries into reactiveValues `queries` and make it named
         invisible(lapply(sort(names(resolved_queries)), \(e) `<-`(queries[["elements"]][[e]][["query"]], resolved_queries[[e]])))
         # insert UI and output only if not already inserted
-        invisible(lapply(sort(names(queries[["elements"]])), insert_ui_output, queries = queries, session = session, conn = conn, input = input, output = output))
+        invisible(lapply(sort(names(queries[["elements"]])), insert_ui_output, queries = queries, session = session, conn = conn, input = input, output = output, queries_results = queries_results))
       }) |>
         bindEvent(clipboard())
 
@@ -73,23 +74,39 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       observe({
         req(hide_result())
         session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", hide_result(), "_result")))
+        isolate({
+          queries_results[[hide_result()]] <- NULL
+        })
+      })
+
+      run_query_task <- ExtendedTask$new(\(conn, query) {
+        promises::future_promise(run_query(conn, query))
       })
 
       observe({
-        req(copy_query())
+        run_query_task$invoke(conn, queries[["elements"]][[show_result()]][["query"]])
+      }) |>
+        bindEvent(show_result())
+
+      observe({
+        # we need to use separate object to store results, because run_query_task$results() changes
+        # each time when run_query_task is invoked with different arguments
+        queries_results[[isolate(show_result())]] <- run_query_task$result()
+      })
+
+      observe({
         clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[copy_query()]]$query, "^--", "-- |"))
       }) |>
         bindEvent(copy_query())
 
       observe({
-        req(remove_query())
         # to be honest, this is necessary, because if we simply do clipboard(NULL), then everything will be re-run
         # so if user has already copied to clipboard something which is displayed, then this will be re-run
         # and this is not something user is expecting - so we really need to write something to clipboard
         # what will be not correct sql statement accepted by sqlviewer - and let's say that we can "sell"
         # this as a feature - user removes query and as a backup we write to the clipboard this query.
         clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[remove_query()]]$query, "^--", "-- |"))
-        rm_ui_output_reactive(remove_query(), queries, session, output) # now remove as user wants
+        rm_ui_output_reactive(remove_query(), queries, session, output, queries_results) # now remove as user wants
         # this is necessary, because otherwise queries are not displayed again if user rerun the same batch of queries
         # as were before in clipboard
         clipboard(NULL)
@@ -107,7 +124,8 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
 #' @param session shiny session object.
 #' @param conn connection to db.
 #' @param output shiny output object.
-#' @param color_mode app color (reactive).
+#' @param input shiny input object.
+#' @param queries_results reactiveValues where we store results from running query.
 #'
 #' @return
 #' Side effect - inserts ui, inserts render function and
@@ -121,7 +139,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
 #' already exists) or adding new query, we just want to rerender this.
 #'
 #' @noRd
-insert_ui_output <- function(queries_name, queries, session, conn, input, output) {
+insert_ui_output <- function(queries_name, queries, session, conn, input, output, queries_results) {
   if (is.null(queries[["elements"]][[queries_name]][["inserted"]])) {
     selector <- determine_selector(queries_name, queries, session)
     tbl_query_name_id <- session$ns(stringi::stri_c("tbl_", queries_name))
@@ -180,10 +198,10 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
              )
 
     output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- reactable::renderReactable({
-      display_tbl(run_query(conn, queries[["elements"]][[queries_name]][["query"]]),
+      req(queries_results[[queries_name]])
+      display_tbl(queries_results[[queries_name]],
                   color_theme = add_reactable_theme())
-    }) |>
-      bindEvent(reactable::getReactableState(stringi::stri_c("tbl_", queries_name), "selected"))
+    })
 
     queries[["elements"]][[queries_name]][["inserted"]] <- TRUE
   }
@@ -216,16 +234,18 @@ determine_selector <- function(queries_name, queries, session) {
 #' @param queries queries.
 #' @param session shiny session object.
 #' @param output shiny output object.
+#' @param queries_results reactiveValues where we store results after running queries.
 #'
 #' @return
 #' Side effect - removes UI, output and element from queries.
 #' @noRd
-rm_ui_output_reactive <- function(queries_name, queries, session, output) {
+rm_ui_output_reactive <- function(queries_name, queries, session, output, queries_results) {
   removeUI(stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", queries_name))))
   output[[stringi::stri_c("tbl_", queries_name)]] <- NULL
   removeUI(stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", queries_name, "_result"))))
   output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- NULL
   queries[["elements"]][[queries_name]] <- NULL
+  queries_results[[queries_name]] <- NULL
 }
 
 #' Add `reactable` Styling To Table
