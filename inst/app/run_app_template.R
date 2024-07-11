@@ -1,6 +1,6 @@
 rstudio_theme_mode <- "light"
 connection <- DBI::dbConnect(drv = , )
-
+future::plan("multisession")
 shiny::onStop(function() {
   DBI::dbDisconnect(connection)
 })

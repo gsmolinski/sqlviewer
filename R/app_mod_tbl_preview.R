@@ -45,7 +45,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       observe({
         invalidateLater(1000)
         req(observe_clipboard())
-        current_content <- req(suppressWarnings(clipr::read_clip())) # suppress warning if no content in clipboard
+        current_content <- req(suppressWarnings(clipr::read_clip(allow_non_interactive = TRUE))) # suppress warning if no content in clipboard
         req(prepare_content_to_evaluate(current_content))
         clipboard(current_content)
       })
@@ -95,7 +95,8 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       })
 
       observe({
-        clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[copy_query()]]$query, "^--", "-- |"))
+        clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[copy_query()]]$query, "^--", "-- |"),
+                          allow_non_interactive = TRUE)
       }) |>
         bindEvent(copy_query())
 
@@ -105,7 +106,8 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         # and this is not something user is expecting - so we really need to write something to clipboard
         # what will be not correct sql statement accepted by sqlviewer - and let's say that we can "sell"
         # this as a feature - user removes query and as a backup we write to the clipboard this query.
-        clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[remove_query()]]$query, "^--", "-- |"))
+        clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[remove_query()]]$query, "^--", "-- |"),
+                          allow_non_interactive = TRUE)
         rm_ui_output_reactive(remove_query(), queries, session, output, queries_results) # now remove as user wants
         # this is necessary, because otherwise queries are not displayed again if user rerun the same batch of queries
         # as were before in clipboard

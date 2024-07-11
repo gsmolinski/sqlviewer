@@ -74,7 +74,7 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' temp_db <- tempfile("sqlviewerDB_example", fileext = ".db")
+#' temp_db <- fs::file_temp("sqlviewerDB_example", ext = ".db")
 #' conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
 #' DBI::dbWriteTable(conn, "iris", iris)
 #' DBI::dbDisconnect(conn)
@@ -90,16 +90,16 @@
 #' }
 open <- function(drv, ..., app_host = "127.0.0.1", app_port = 49152, save_temp_path_to = "") {
   check_requirements(drv, app_host, app_port)
-  temp_file <- tempfile("sqlviewer", fileext = ".R")
+  temp_file <- fs::file_temp("sqlviewer_", ext = ".R")
   save_temporary_path(temp_file, save_temp_path_to)
   pass_args_to_script(drv, ..., temp_file = temp_file, app_host = app_host, app_port = app_port, rstudio_dark_theme = rstudioapi::getThemeInfo()$dark)
   job_id <- run_bg_job(temp_file, app_host, app_port)
-  file.remove(temp_file)
-  Sys.sleep(1) # otherwise everything runs too quickly to go back to console
+  Sys.sleep(5) # otherwise everything runs too quickly to go back to console
   rstudioapi::executeCommand("activateConsole")
   rstudioapi::viewer(paste0("http://", app_host, ":", app_port))
   message_opening(app_host, app_port)
   message_closing(job_id, temp_file)
+  file.remove(temp_file)
 }
 
 #' Check Arguments Passed To Function.
@@ -137,13 +137,9 @@ check_requirements <- function(drv, app_host, app_port, save_temp_path_to) {
     stop("Argument passed to 'drv' parameter must include package name, e.g. use 'RPostgres::Postgres' instead of 'Postgres'. Make sure this package is installed on your machine.", call. = FALSE)
   }
 
-  if (is.na(save_temp_path_to) || typeof(save_temp_path_to) != "character") {
-    stop("Argument passed to 'save_temp_path_to' must be of type character", .call = FALSE)
-  }
-
   if (!missing(save_temp_path_to)) {
-    if (nchar(save_temp_path_to) == 0) {
-      stop("Argument passed to 'save_temp_path_to' must have at lease one character", .call = FALSE)
+    if (is.na(save_temp_path_to) || typeof(save_temp_path_to) != "character" || nchar(save_temp_path_to) == 0) {
+      stop("Argument passed to 'save_temp_path_to' must be of type character and have at least one character", .call = FALSE)
     }
   }
 }
