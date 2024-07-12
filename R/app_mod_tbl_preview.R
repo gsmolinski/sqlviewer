@@ -98,9 +98,6 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         req(hide_result())
         session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", hide_result(), "_result")))
         isolate({
-        if (exists(paste("ext_task_", hide_result()), envir = environment(main_mod_envir))) {
-          rm(list = paste0("ext_task_", hide_result()), envir = environment(main_mod_envir))
-        }
           queries_results[[hide_result()]] <- NULL
         })
       })
