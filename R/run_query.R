@@ -14,7 +14,7 @@ run_query <- function(conn, query) {
   eval(conn)
   query <- stringi::stri_c("SELECT * FROM ( ", stringi::stri_replace_all_fixed(query, ";", ""), " ) AS t__sqlviewer__t LIMIT 1000;")
   result <- tryCatch(DBI::dbGetQuery(connection, query),
-                     error = \(e) data.frame(validation = as.character(e)))
+                     error = \(e) data.frame(Validation = as.character(e)))
   invisible(DBI::dbDisconnect(connection))
   result
 }

@@ -38,6 +38,11 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         if (!isTruthy(observe_clipboard())) {
           invisible(lapply(names(queries[["elements"]]), rm_ui_output_reactive, queries = queries, session = session, output = output, queries_results = queries_results))
           # this is necessary, because otherwise queries won't be re-run if user will copy the same queries
+          invisible(lapply(names(queries[["elements"]]), \(e) {
+            if (exists(paste("ext_task_", e), envir = environment(main_mod_envir))) {
+              rm(list = paste0("ext_task_", e), envir = environment(main_mod_envir))
+            }
+          }))
           clipboard(NULL)
         }
       })
@@ -51,6 +56,19 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       })
 
       observe({
+        invalidateLater(2000)
+        isolate({
+          if (isTruthy(show_result())) {
+            lapply(names(queries[["elements"]]), \(e) {
+              if ((eval(parse(text = paste0("ext_task_", e, "$status()"))) == "success" || eval(parse(text = paste0("ext_task_", e, "$status()"))) == "error")  && !is.null(queries_results[[e]]) && names(queries_results[[e]])[[1]] == "Computing..." && queries_results[[e]][[1]][[1]] == "") {
+                queries_results[[e]] <- eval(parse(text = paste0("ext_task_", e, "$result()")))
+              }
+            })
+          }
+        })
+      })
+
+      observe({
         queries_names <- get_queries_names(clipboard())
         req(check_no_duplicated_names(queries_names))
         queries_tbl <- mark_separate_queries(clipboard())
@@ -59,6 +77,16 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         resolved_queries <- resolve_queries(queries_order, queries_tbl, queries_names)
         # remove from ui, output and reactive `queries` everything from clipboard (because user decided to re-run this)
         invisible(lapply(sort(names(resolved_queries)), rm_ui_output_reactive, queries = queries, session = session, output = output, queries_results = queries_results))
+        invisible(lapply(names(resolved_queries), \(e) {
+          if (exists(paste("ext_task_", e), envir = environment(main_mod_envir))) {
+            rm(list = paste0("ext_task_", e), envir = environment(main_mod_envir))
+          }
+        }))
+        invisible(lapply(names(resolved_queries), \(e) {
+          assign(paste0("ext_task_", e), ExtendedTask$new(\(conn, query) {
+            promises::future_promise(sqlviewer:::run_query(conn, query))
+          }), envir = environment(main_mod_envir))
+        }))
         # insert queries into reactiveValues `queries` and make it named
         invisible(lapply(sort(names(resolved_queries)), \(e) `<-`(queries[["elements"]][[e]][["query"]], resolved_queries[[e]])))
         # insert UI and output only if not already inserted
@@ -67,32 +95,24 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         bindEvent(clipboard())
 
       observe({
-        req(show_result())
-        session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", show_result(), "_result")))
-      })
-
-      observe({
         req(hide_result())
         session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", hide_result(), "_result")))
         isolate({
+        if (exists(paste("ext_task_", hide_result()), envir = environment(main_mod_envir))) {
+          rm(list = paste0("ext_task_", hide_result()), envir = environment(main_mod_envir))
+        }
           queries_results[[hide_result()]] <- NULL
         })
       })
 
-      run_query_task <- ExtendedTask$new(\(conn, query) {
-        promises::future_promise(run_query(conn, query))
-      })
+      main_mod_envir <- function() {} # we use this just to reference to *this* environment
 
       observe({
-        run_query_task$invoke(conn, queries[["elements"]][[show_result()]][["query"]])
+        session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", show_result(), "_result")))
+        queries_results[[show_result()]] <- data.frame("Computing..." = "")
+        eval(parse(text = paste0("ext_task_", show_result(), "$invoke(conn, queries[['elements']][['", show_result(), "']][['query']])")))
       }) |>
         bindEvent(show_result())
-
-      observe({
-        # we need to use separate object to store results, because run_query_task$results() changes
-        # each time when run_query_task is invoked with different arguments
-        queries_results[[isolate(show_result())]] <- run_query_task$result()
-      })
 
       observe({
         clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[copy_query()]]$query, "^--", "-- |"),
@@ -109,6 +129,9 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[remove_query()]]$query, "^--", "-- |"),
                           allow_non_interactive = TRUE)
         rm_ui_output_reactive(remove_query(), queries, session, output, queries_results) # now remove as user wants
+        if (exists(paste("ext_task_", remove_query()), envir = environment(main_mod_envir))) {
+          rm(list = paste0("ext_task_", remove_query()), envir = environment(main_mod_envir))
+        }
         # this is necessary, because otherwise queries are not displayed again if user rerun the same batch of queries
         # as were before in clipboard
         clipboard(NULL)
