@@ -32,17 +32,12 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
 
       clipboard <- reactiveVal()
       queries <- reactiveValues()
-      queries_results <- reactiveValues()
 
       observe({
         if (!isTruthy(observe_clipboard())) {
           invisible(lapply(names(queries[["elements"]]), rm_ui_output_reactive, queries = queries, session = session, output = output, queries_results = queries_results))
+          invisible(lapply(names(queries[["elements"]]), remove_extended_task_fun, main_mod_envir = main_mod_envir))
           # this is necessary, because otherwise queries won't be re-run if user will copy the same queries
-          invisible(lapply(names(queries[["elements"]]), \(e) {
-            if (exists(paste("ext_task_", e), envir = environment(main_mod_envir))) {
-              rm(list = paste0("ext_task_", e), envir = environment(main_mod_envir))
-            }
-          }))
           clipboard(NULL)
         }
       })
@@ -64,11 +59,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         resolved_queries <- resolve_queries(queries_order, queries_tbl, queries_names)
         # remove from ui, output and reactive `queries` everything from clipboard (because user decided to re-run this)
         invisible(lapply(sort(names(resolved_queries)), rm_ui_output_reactive, queries = queries, session = session, output = output, queries_results = queries_results))
-        invisible(lapply(names(resolved_queries), \(e) {
-          if (exists(paste("ext_task_", e), envir = environment(main_mod_envir))) {
-            rm(list = paste0("ext_task_", e), envir = environment(main_mod_envir))
-          }
-        }))
+        invisible(lapply(names(resolved_queries), remove_extended_task_fun, main_mod_envir = main_mod_envir))
         invisible(lapply(names(resolved_queries), \(e) {
           assign(paste0("ext_task_", e), ExtendedTask$new(\(conn, query) {
             run_query_fun <- get("run_query", envir = parent.env(parent.env(environment(main_mod_envir))))
@@ -78,7 +69,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         # insert queries into reactiveValues `queries` and make it named
         invisible(lapply(sort(names(resolved_queries)), \(e) `<-`(queries[["elements"]][[e]][["query"]], resolved_queries[[e]])))
         # insert UI and output only if not already inserted
-        invisible(lapply(sort(names(queries[["elements"]])), insert_ui_output, queries = queries, session = session, conn = conn, input = input, output = output, queries_results = queries_results))
+        invisible(lapply(sort(names(queries[["elements"]])), insert_ui_output, queries = queries, session = session, conn = conn, input = input, output = output, queries_results = queries_results, main_mod_envir = main_mod_envir))
       }) |>
         bindEvent(clipboard())
 
@@ -87,7 +78,6 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         isolate({
           if (eval(parse(text = paste0("ext_task_", hide_result(), "$status()"))) != "running") {
             session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", hide_result(), "_result")))
-            queries_results[[hide_result()]] <- NULL
           }
         })
       })
@@ -97,24 +87,10 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       observe({
         if (eval(parse(text = paste0("ext_task_", show_result(), "$status()"))) != "running") {
           session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", show_result(), "_result")))
-          queries_results[[show_result()]] <- data.frame("Computing..." = "")
           eval(parse(text = paste0("ext_task_", show_result(), "$invoke(conn, queries[['elements']][['", show_result(), "']][['query']])")))
         }
       }) |>
         bindEvent(show_result())
-
-      observe({
-        invalidateLater(1000)
-        isolate({
-          if (isTruthy(show_result())) {
-            lapply(names(queries[["elements"]]), \(e) {
-              if ((eval(parse(text = paste0("ext_task_", e, "$status()"))) == "success" || eval(parse(text = paste0("ext_task_", e, "$status()"))) == "error")  && !is.null(queries_results[[e]]) && names(queries_results[[e]])[[1]] == "Computing..." && queries_results[[e]][[1]][[1]] == "") {
-                queries_results[[e]] <- eval(parse(text = paste0("ext_task_", e, "$result()")))
-              }
-            })
-          }
-        })
-      })
 
       observe({
         clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[copy_query()]]$query, "^--", "-- |"),
@@ -131,9 +107,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[remove_query()]]$query, "^--", "-- |"),
                           allow_non_interactive = TRUE)
         rm_ui_output_reactive(remove_query(), queries, session, output, queries_results) # now remove as user wants
-        if (exists(paste("ext_task_", remove_query()), envir = environment(main_mod_envir))) {
-          rm(list = paste0("ext_task_", remove_query()), envir = environment(main_mod_envir))
-        }
+        remove_extended_task_fun(remove_query(), main_mod_envir)
         # this is necessary, because otherwise queries are not displayed again if user rerun the same batch of queries
         # as were before in clipboard
         clipboard(NULL)
@@ -153,6 +127,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
 #' @param output shiny output object.
 #' @param input shiny input object.
 #' @param queries_results reactiveValues where we store results from running query.
+#' @param main_mod_envir function to retrieve main module environment.
 #'
 #' @return
 #' Side effect - inserts ui, inserts render function and
@@ -166,7 +141,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
 #' already exists) or adding new query, we just want to rerender this.
 #'
 #' @noRd
-insert_ui_output <- function(queries_name, queries, session, conn, input, output, queries_results) {
+insert_ui_output <- function(queries_name, queries, session, conn, input, output, queries_results, main_mod_envir) {
   if (is.null(queries[["elements"]][[queries_name]][["inserted"]])) {
     selector <- determine_selector(queries_name, queries, session)
     tbl_query_name_id <- session$ns(stringi::stri_c("tbl_", queries_name))
@@ -225,8 +200,12 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
              )
 
     output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- reactable::renderReactable({
-      req(queries_results[[queries_name]])
-      display_tbl(queries_results[[queries_name]],
+      isolate({
+        if (eval(parse(text = paste0("ext_task_", queries_name, "$status()")), envir = environment(main_mod_envir)) == "initial") {
+          session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
+        }
+      })
+      display_tbl(eval(parse(text = paste0("ext_task_", queries_name, "$result()")), envir = environment(main_mod_envir)),
                   color_theme = add_reactable_theme())
     })
 
@@ -272,7 +251,20 @@ rm_ui_output_reactive <- function(queries_name, queries, session, output, querie
   removeUI(stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", queries_name, "_result"))))
   output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- NULL
   queries[["elements"]][[queries_name]] <- NULL
-  queries_results[[queries_name]] <- NULL
+}
+
+#' Remove Extended Task Object
+#'
+#' @param query_name chosen query name.
+#' @param main_mod_envir function to retrieve main mod environment.
+#'
+#' @return
+#' Side effect - removes extended task object.
+#' @noRd
+remove_extended_task_fun <- function(query_name, main_mod_envir) {
+  if (exists(paste("ext_task_", query_name), envir = environment(main_mod_envir))) {
+    rm(list = paste0("ext_task_", query_name), envir = environment(main_mod_envir))
+  }
 }
 
 #' Add `reactable` Styling To Table
