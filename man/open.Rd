@@ -9,7 +9,8 @@ open(
   ...,
   app_host = "127.0.0.1",
   app_port = 49152,
-  save_temp_path_to = ""
+  save_temp_path_to = "",
+  wd = getwd()
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ open(
 \item{app_port}{TCP port (integer vector length 1) on which application should listen on. Defaults to \code{49152}. Argument passed to \verb{[shiny::shinyApp()]}.}
 
 \item{save_temp_path_to}{where to save \emph{path} to temporary file? Defaults to \code{""}, meaning no saving. Argument passed to \code{\link[base:cat]{base::cat()}} to \code{file} parameter. See \emph{Security} section for details.}
+
+\item{wd}{working directory (character vector length 1) of the calling function. See \emph{Details} section.}
 }
 \value{
 Used for side effect: to run app as a background job.
@@ -41,6 +44,10 @@ will be installed. In other words, if using \code{RPostgres} package (or any oth
 Currently, it is not possible to construct function that will close background job. To close the app, one
 must go to 'Background Jobs' pane and press 'STOP' button or close the main R session, so all child R sessions
 (including background jobs) will be closed as well.
+
+To run background job, temporary R script is created (in temporary location). If one passes object for which it is relevant
+what is \strong{current} working directory (like relative path to database), then it is necessary to set proper working directory
+in temporary script. By default it will be working directory returned by \verb{[getwd()]}.
 }
 \section{Running SQL Queries}{
 

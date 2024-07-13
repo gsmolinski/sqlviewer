@@ -1,7 +1,7 @@
-rstudio_theme_mode <- "light"
-connection <- expression(connection <- DBI::dbConnect(drv = , ))
-future::plan("multisession")
 
+connection <- expression(connection <- DBI::dbConnect(drv = , ))
+rstudio_theme_mode <- "light"
+future::plan("multisession")
 
 
 
