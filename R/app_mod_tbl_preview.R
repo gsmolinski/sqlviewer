@@ -85,7 +85,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         invisible(lapply(names(resolved_queries), \(e) {
           assign(paste0("ext_task_", e), ExtendedTask$new(\(conn, query) {
             run_query_fun <- get("run_query", envir = parent.env(parent.env(environment(main_mod_envir))))
-            promises::future_promise(run_query_fun(conn, query))
+            promises::future_promise(run_query_fun(conn, query), seed = TRUE)
           }), envir = environment(main_mod_envir))
         }))
         # insert queries into reactiveValues `queries` and make it named
@@ -246,7 +246,7 @@ determine_selector <- function(queries_name, queries, session) {
     selector <- ".sqlviewer_header"
   } else {
     # "_result" at the end, because it should be inserted after the render responsible to display query result, not query name
-    selector <- stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", names(queries[["elements"]])[[ind - 1]], "_result")))
+    selector <- stringi::stri_c("#", session$ns(stringi::stri_c("tbl_", sort(names(queries[["elements"]]))[[ind - 1]], "_result")))
   }
   selector
 }
