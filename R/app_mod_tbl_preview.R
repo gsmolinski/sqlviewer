@@ -56,19 +56,6 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       })
 
       observe({
-        invalidateLater(2000)
-        isolate({
-          if (isTruthy(show_result())) {
-            lapply(names(queries[["elements"]]), \(e) {
-              if ((eval(parse(text = paste0("ext_task_", e, "$status()"))) == "success" || eval(parse(text = paste0("ext_task_", e, "$status()"))) == "error")  && !is.null(queries_results[[e]]) && names(queries_results[[e]])[[1]] == "Computing..." && queries_results[[e]][[1]][[1]] == "") {
-                queries_results[[e]] <- eval(parse(text = paste0("ext_task_", e, "$result()")))
-              }
-            })
-          }
-        })
-      })
-
-      observe({
         queries_names <- get_queries_names(clipboard())
         req(check_no_duplicated_names(queries_names))
         queries_tbl <- mark_separate_queries(clipboard())
@@ -111,6 +98,19 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         eval(parse(text = paste0("ext_task_", show_result(), "$invoke(conn, queries[['elements']][['", show_result(), "']][['query']])")))
       }) |>
         bindEvent(show_result())
+
+      observe({
+        invalidateLater(1000)
+        isolate({
+          if (isTruthy(show_result())) {
+            lapply(names(queries[["elements"]]), \(e) {
+              if ((eval(parse(text = paste0("ext_task_", e, "$status()"))) == "success" || eval(parse(text = paste0("ext_task_", e, "$status()"))) == "error")  && !is.null(queries_results[[e]]) && names(queries_results[[e]])[[1]] == "Computing..." && queries_results[[e]][[1]][[1]] == "") {
+                queries_results[[e]] <- eval(parse(text = paste0("ext_task_", e, "$result()")))
+              }
+            })
+          }
+        })
+      })
 
       observe({
         clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[copy_query()]]$query, "^--", "-- |"),
