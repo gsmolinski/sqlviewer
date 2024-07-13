@@ -13,9 +13,9 @@ open(
 )
 }
 \arguments{
-\item{drv}{database driver name \emph{with} package name (character vector length 1), e.g. \code{"RPostgres::Postgres"}. See \emph{Details} section.}
+\item{drv}{database driver call \emph{with} package name call, e.g. \code{RPostgres::Postgres()}. See \emph{Details} section.}
 
-\item{...}{other database driver arguments passed to \verb{[DBI::dbConnect()]}. See that function for details.}
+\item{...}{other database driver arguments passed to \verb{[DBI::dbConnect()]}. See that function for details. \emph{Must be named}.}
 
 \item{app_host}{IPv4 address (character vector length 1) on which application should listen on. Defaults to \code{"127.0.0.1"} (localhost). Argument passed to \verb{[shiny::shinyApp()]}.}
 
@@ -32,15 +32,13 @@ preview SQL queries and construct complex queries using solution inspired by pip
 }
 \details{
 To establish connection with database using \verb{[DBI::dbConnect()]}, it is necessary to provide
-database driver (as well as other arguments which are needed by specific driver). However,
-implementation of \code{sqlviewer} expects that driver will be provided as a character vector length 1, not
-a function call itself. Moreover, it is also necessary to provide package name along with the driver.
+database driver (as well as other arguments which are needed by specific driver. \emph{These arguments must be named}). However,
+implementation of \code{sqlviewer} expects that driver will be provided along with the package name.
 As an example, if one would like to connect with the PostgreSQL database and use package \code{RPostgres} for that,
-then it would be necessary to pass an argument: \code{"RPostgres::Postgres"} (notice quotation mark indicating character vector and lack of parenthesis).
-Even that user should provide character vector, it is expected that database package from which driver is used,
+then it would be necessary to pass an argument: \code{RPostgres::Postgres()}. Tt is also expected that database package from which driver is used,
 will be installed. In other words, if using \code{RPostgres} package (or any other database specific package), this package must be installed on machine.
 
-Currently, it is not possible to construct function which will close running background job. To close the app, one
+Currently, it is not possible to construct function that will close background job. To close the app, one
 must go to 'Background Jobs' pane and press 'STOP' button or close the main R session, so all child R sessions
 (including background jobs) will be closed as well.
 }
@@ -108,11 +106,11 @@ the R script was saved (to be able to remove it manually later), one can pass ch
 
 \examples{
 \dontrun{
-temp_db <- tempfile("sqlviewerDB_example", fileext = ".db")
-conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
+temp_db <- fs::file_temp("sqlviewerDB_example", ext = ".db")
+conn <- DBI::dbConnect(RSQLite::SQLite(), dbname = temp_db)
 DBI::dbWriteTable(conn, "iris", iris)
 DBI::dbDisconnect(conn)
-sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
+sqlviewer::open(RSQLite::SQLite(), dbname = temp_db)
 # Now, copy SQL statement to clipboard (without comment signs!) and include label (-- #all_data)
 #
 # -- #all_data

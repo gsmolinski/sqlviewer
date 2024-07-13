@@ -21,5 +21,6 @@
 #
 # DBI::dbDisconnect(mydb)
 #
-# #TODO: znów nie działa poprawnie alfabetyczne układanie nowych queries, trzeba wywołać sqlviewer:::run_query, poprawić.
+# #TODO: znów nie działa poprawnie alfabetyczne układanie nowych queries. Pomyśleć, czy można zrezygnować z RStudio IDE jako warunku.
 # # zrobić coś, żeby użytkownik nie wciskał kilka razy computing, może robić invoke tylko wtedy, gdy status inny niż running?
+# # Warning: UNRELIABLE VALUE: Future dodać options, żeby nie wyświetlało

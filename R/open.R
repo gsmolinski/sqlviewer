@@ -3,8 +3,8 @@
 #' Runs `shiny` application as a background job with the functionality provided by `sqlviewer`:
 #' preview SQL queries and construct complex queries using solution inspired by pipe operator.
 #'
-#' @param drv database driver name *with* package name (character vector length 1), e.g. `"RPostgres::Postgres"`. See *Details* section.
-#' @param ... other database driver arguments passed to `[DBI::dbConnect()]`. See that function for details.
+#' @param drv database driver call *with* package name call, e.g. `RPostgres::Postgres()`. See *Details* section.
+#' @param ... other database driver arguments passed to `[DBI::dbConnect()]`. See that function for details. *Must be named*.
 #' @param app_host IPv4 address (character vector length 1) on which application should listen on. Defaults to `"127.0.0.1"` (localhost). Argument passed to `[shiny::shinyApp()]`.
 #' @param app_port TCP port (integer vector length 1) on which application should listen on. Defaults to `49152`. Argument passed to `[shiny::shinyApp()]`.
 #' @param save_temp_path_to where to save *path* to temporary file? Defaults to `""`, meaning no saving. Argument passed to [base::cat()] to `file` parameter. See *Security* section for details.
@@ -13,15 +13,13 @@
 #' Used for side effect: to run app as a background job.
 #' @details
 #' To establish connection with database using `[DBI::dbConnect()]`, it is necessary to provide
-#' database driver (as well as other arguments which are needed by specific driver). However,
-#' implementation of `sqlviewer` expects that driver will be provided as a character vector length 1, not
-#' a function call itself. Moreover, it is also necessary to provide package name along with the driver.
+#' database driver (as well as other arguments which are needed by specific driver. *These arguments must be named*). However,
+#' implementation of `sqlviewer` expects that driver will be provided along with the package name.
 #' As an example, if one would like to connect with the PostgreSQL database and use package `RPostgres` for that,
-#' then it would be necessary to pass an argument: `"RPostgres::Postgres"` (notice quotation mark indicating character vector and lack of parenthesis).
-#' Even that user should provide character vector, it is expected that database package from which driver is used,
+#' then it would be necessary to pass an argument: `RPostgres::Postgres()`. Tt is also expected that database package from which driver is used,
 #' will be installed. In other words, if using `RPostgres` package (or any other database specific package), this package must be installed on machine.
 #'
-#' Currently, it is not possible to construct function which will close running background job. To close the app, one
+#' Currently, it is not possible to construct function that will close background job. To close the app, one
 #' must go to 'Background Jobs' pane and press 'STOP' button or close the main R session, so all child R sessions
 #' (including background jobs) will be closed as well.
 #' @section Running SQL Queries:
@@ -75,10 +73,10 @@
 #' @examples
 #' \dontrun{
 #' temp_db <- fs::file_temp("sqlviewerDB_example", ext = ".db")
-#' conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = temp_db)
+#' conn <- DBI::dbConnect(RSQLite::SQLite(), dbname = temp_db)
 #' DBI::dbWriteTable(conn, "iris", iris)
 #' DBI::dbDisconnect(conn)
-#' sqlviewer::open("duckdb::duckdb", dbdir = temp_db)
+#' sqlviewer::open(RSQLite::SQLite(), dbname = temp_db)
 #' # Now, copy SQL statement to clipboard (without comment signs!) and include label (-- #all_data)
 #' #
 #' # -- #all_data
@@ -89,6 +87,7 @@
 #' file.remove(temp_db)
 #' }
 open <- function(drv, ..., app_host = "127.0.0.1", app_port = 49152, save_temp_path_to = "") {
+  drv <- deparse(substitute(drv))
   check_requirements(drv, app_host, app_port)
   temp_file <- fs::file_temp("sqlviewer_", ext = ".R")
   save_temporary_path(temp_file, save_temp_path_to)
@@ -103,8 +102,8 @@ open <- function(drv, ..., app_host = "127.0.0.1", app_port = 49152, save_temp_p
 }
 
 #' Check Arguments Passed To Function.
-#'
-#' @param drv database driver name with package name.
+
+#' @param drv argument passed to drv parameter.
 #' @param app_host host on which app will be running.
 #' @param app_port port on which app will be running.
 #' @param save_temp_path_to path to where save path to temp file.
@@ -127,10 +126,6 @@ check_requirements <- function(drv, app_host, app_port, save_temp_path_to) {
 
   if (app_port %% 1 != 0) {
     stop("Argument passed to 'app_port' parameter must be an integer", call. = FALSE)
-  }
-
-  if (is.na(drv) || typeof(drv) != "character") {
-    stop("Argument passed to 'drv' parameter must be of type character. Did you accidentally call database driver function? Pass driver as a character with package name, e.g. 'RPostgres::Postgres' instead of RPostgres::Postgres() or Postgres()", call. = FALSE)
   }
 
   if (!grepl("::", drv, fixed = TRUE)) {
@@ -181,7 +176,7 @@ pass_args_to_script <- function(drv, ..., temp_file, app_host, app_port, rstudio
                       collapse = ", ")
   script_code <- readLines(system.file(package = "sqlviewer", "app", "run_app_template.R"))
   script_code[[2]] <- sub("drv = , ", paste0("drv = , ", rest_args), script_code[[2]], fixed = TRUE)
-  script_code[[2]] <- sub("drv = ", paste0("drv = ", gsub('"|\\\'|\\(|\\)', "", drv, perl = TRUE), "()"), script_code[[2]], fixed = TRUE)
+  script_code[[2]] <- sub("drv = ", paste0("drv = ", gsub('"', "", drv, fixed = TRUE)), script_code[[2]], fixed = TRUE)
   script_code[[11]] <- sub("host = ", paste0("host = ", '"', app_host, '"'), script_code[[11]], fixed = TRUE)
   script_code[[12]] <- sub("port = ", paste0("port = ", app_port), script_code[[12]], fixed = TRUE)
   if (rstudio_dark_theme) {
