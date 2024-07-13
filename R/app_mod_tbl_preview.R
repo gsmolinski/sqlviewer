@@ -61,7 +61,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         invisible(lapply(sort(names(resolved_queries)), rm_ui_output_reactive, queries = queries, session = session, output = output, queries_results = queries_results))
         invisible(lapply(names(resolved_queries), remove_extended_task_fun, main_mod_envir = main_mod_envir))
         invisible(lapply(names(resolved_queries), \(e) {
-          assign(paste0("ext_task_", e), ExtendedTask$new(\(conn, query) {
+          assign(stringi::stri_c("ext_task_", e), ExtendedTask$new(\(conn, query) {
             run_query_fun <- get("run_query", envir = parent.env(parent.env(environment(main_mod_envir))))
             promises::future_promise(run_query_fun(conn, query), seed = TRUE)
           }), envir = environment(main_mod_envir))
@@ -76,7 +76,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       observe({
         req(hide_result())
         isolate({
-          if (eval(parse(text = paste0("ext_task_", hide_result(), "$status()"))) != "running") {
+          if (eval(parse(text = stringi::stri_c("ext_task_", hide_result(), "$status()"))) != "running") {
             session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", hide_result(), "_result")))
           }
         })
@@ -85,9 +85,9 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       main_mod_envir <- function() {} # we use this just to reference to *this* environment
 
       observe({
-        if (eval(parse(text = paste0("ext_task_", show_result(), "$status()"))) != "running") {
+        if (eval(parse(text = stringi::stri_c("ext_task_", show_result(), "$status()"))) != "running") {
           session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", show_result(), "_result")))
-          eval(parse(text = paste0("ext_task_", show_result(), "$invoke(conn, queries[['elements']][['", show_result(), "']][['query']])")))
+          eval(parse(text = stringi::stri_c("ext_task_", show_result(), "$invoke(conn, queries[['elements']][['", show_result(), "']][['query']])")))
         }
       }) |>
         bindEvent(show_result())
@@ -201,11 +201,11 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
 
     output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- reactable::renderReactable({
       isolate({
-        if (eval(parse(text = paste0("ext_task_", queries_name, "$status()")), envir = environment(main_mod_envir)) == "initial") {
+        if (eval(parse(text = stringi::stri_c("ext_task_", queries_name, "$status()")), envir = environment(main_mod_envir)) == "initial") {
           session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
         }
       })
-      display_tbl(eval(parse(text = paste0("ext_task_", queries_name, "$result()")), envir = environment(main_mod_envir)),
+      display_tbl(eval(parse(text = stringi::stri_c("ext_task_", queries_name, "$result()")), envir = environment(main_mod_envir)),
                   color_theme = add_reactable_theme())
     })
 
@@ -262,8 +262,8 @@ rm_ui_output_reactive <- function(queries_name, queries, session, output, querie
 #' Side effect - removes extended task object.
 #' @noRd
 remove_extended_task_fun <- function(query_name, main_mod_envir) {
-  if (exists(paste("ext_task_", query_name), envir = environment(main_mod_envir))) {
-    rm(list = paste0("ext_task_", query_name), envir = environment(main_mod_envir))
+  if (exists(stringi::stri_c("ext_task_", query_name), envir = environment(main_mod_envir))) {
+    rm(list = stringi::stri_c("ext_task_", query_name), envir = environment(main_mod_envir))
   }
 }
 

@@ -38,7 +38,7 @@ To establish connection with database using \verb{[DBI::dbConnect()]}, it is nec
 database driver (as well as other arguments which are needed by specific driver. \emph{These arguments must be named}). However,
 implementation of \code{sqlviewer} expects that driver will be provided along with the package name.
 As an example, if one would like to connect with the PostgreSQL database and use package \code{RPostgres} for that,
-then it would be necessary to pass an argument: \code{RPostgres::Postgres()}. Tt is also expected that database package from which driver is used,
+then it would be necessary to pass an argument: \verb{[RPostgres::Postgres()]}. Tt is also expected that database package from which driver is used,
 will be installed. In other words, if using \code{RPostgres} package (or any other database specific package), this package must be installed on machine.
 
 Currently, it is not possible to construct function that will close background job. To close the app, one
@@ -47,7 +47,7 @@ must go to 'Background Jobs' pane and press 'STOP' button or close the main R se
 
 To run background job, temporary R script is created (in temporary location). If one passes object for which it is relevant
 what is \strong{current} working directory (like relative path to database), then it is necessary to set proper working directory
-in temporary script. By default it will be working directory returned by \verb{[getwd()]}.
+in temporary script. By default it will be working directory returned by \verb{[getwd()]} and in most cases should just work.
 }
 \section{Running SQL Queries}{
 
@@ -91,12 +91,22 @@ can be below query into which this nested query will be piped.
 
 \section{App Functionality}{
 
+To insert query into app, copy-paste it to clipboard. App will insert queries only if clipboard content changed from
+previous insertion (e.g. if the same content is copied twice in a row, query won't be re-inserted). Each query must be named
+and \strong{if some names of queries are duplicated, then app won't run}.
+
 Switch button is used to indicate if clipboard should be observed. If set to off, then all
 existing queries will be removed and no new queries will be created. To see result for chosen query,
 click on its name. To copy query - click copy button - and to remove query, click remove button. When
 query is removed, it is also copied to clipboard.
 
-\code{sqlviewer} displays only first 1000 rows of table. If some names of queries are duplicated, then app won't run.
+Each query is run in separate process using \verb{[shiny::ExtendedTask]} and when the query is running, app will not
+allow to re-run the same query with the one exception - if the query was re-inserted to the app (copy-pasted again
+to clipboard), then it will be possible to run this query - it will run in the new process, which means that previously
+started query is still running. Unfortunately, it is impossible to kill process started by \verb{[shiny::ExtendedTask]} and if
+one would need to do this, the only solution is to restart main R session.
+
+\code{sqlviewer} displays only first 1000 rows of table.
 }
 
 \section{Security}{

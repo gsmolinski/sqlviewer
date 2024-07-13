@@ -22,4 +22,3 @@
 # DBI::dbDisconnect(mydb)
 #
 # #TODO: Pomyśleć, czy można zrezygnować z RStudio IDE jako warunku.
-# # zrobić coś, żeby użytkownik nie wciskał kilka razy computing, może robić invoke tylko wtedy, gdy status inny niż running?
