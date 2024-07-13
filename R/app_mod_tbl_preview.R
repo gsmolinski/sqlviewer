@@ -84,18 +84,22 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
 
       observe({
         req(hide_result())
-        session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", hide_result(), "_result")))
         isolate({
-          queries_results[[hide_result()]] <- NULL
+          if (eval(parse(text = paste0("ext_task_", hide_result(), "$status()"))) != "running") {
+            session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", hide_result(), "_result")))
+            queries_results[[hide_result()]] <- NULL
+          }
         })
       })
 
       main_mod_envir <- function() {} # we use this just to reference to *this* environment
 
       observe({
-        session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", show_result(), "_result")))
-        queries_results[[show_result()]] <- data.frame("Computing..." = "")
-        eval(parse(text = paste0("ext_task_", show_result(), "$invoke(conn, queries[['elements']][['", show_result(), "']][['query']])")))
+        if (eval(parse(text = paste0("ext_task_", show_result(), "$status()"))) != "running") {
+          session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", show_result(), "_result")))
+          queries_results[[show_result()]] <- data.frame("Computing..." = "")
+          eval(parse(text = paste0("ext_task_", show_result(), "$invoke(conn, queries[['elements']][['", show_result(), "']][['query']])")))
+        }
       }) |>
         bindEvent(show_result())
 
