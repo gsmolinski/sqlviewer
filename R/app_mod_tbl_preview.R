@@ -84,7 +84,8 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         }))
         invisible(lapply(names(resolved_queries), \(e) {
           assign(paste0("ext_task_", e), ExtendedTask$new(\(conn, query) {
-            promises::future_promise(sqlviewer:::run_query(conn, query))
+            run_query_fun <- get("run_query", envir = parent.env(parent.env(environment(main_mod_envir))))
+            promises::future_promise(run_query_fun(conn, query))
           }), envir = environment(main_mod_envir))
         }))
         # insert queries into reactiveValues `queries` and make it named
