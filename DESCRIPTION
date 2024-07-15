@@ -29,7 +29,8 @@ Imports:
     reactable,
     rstudioapi,
     shiny,
-    stringi
+    stringi,
+    tools
 Suggests: 
     RSQLite,
     testthat (>= 3.0.0)

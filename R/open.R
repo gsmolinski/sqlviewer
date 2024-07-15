@@ -8,7 +8,7 @@
 #' @param app_host IPv4 address (character vector length 1) on which application should listen on. Defaults to `"127.0.0.1"` (localhost). Argument passed to `[shiny::shinyApp()]`.
 #' @param app_port TCP port (integer vector length 1) on which application should listen on. Defaults to `49152`. Argument passed to `[shiny::shinyApp()]`.
 #' @param save_temp_path_to where to save *path* to temporary file? Defaults to `""`, meaning no saving. Argument passed to [base::cat()] to `file` parameter. See *Security* section for details.
-#' @param wd working directory (character vector length 1) of the calling function. See *Details* section.
+#' @param wd working directory (character vector length 1). See *Details* section.
 #'
 #' @return
 #' Used for side effect: to run app as a background job.
@@ -107,13 +107,13 @@ open <- function(drv, ..., app_host = "127.0.0.1", app_port = 49152, save_temp_p
   temp_file <- fs::file_temp("sqlviewer_", ext = ".R")
   save_temporary_path(temp_file, save_temp_path_to)
   pass_args_to_script(drv, ..., temp_file = temp_file, app_host = app_host, app_port = app_port, rstudio_dark_theme = rstudioapi::getThemeInfo()$dark, wd = wd)
-  job_id <- run_bg_job(temp_file, app_host, app_port)
+  job_id <- run_bg_job(temp_file)
   Sys.sleep(5) # otherwise everything runs too quickly to go back to console
   rstudioapi::executeCommand("activateConsole")
   rstudioapi::viewer(paste0("http://", app_host, ":", app_port))
   message_opening(app_host, app_port)
   message_closing(job_id, temp_file)
-  file.remove(temp_file)
+  invisible(file.remove(temp_file))
 }
 
 #' Check Arguments Passed To Function.
@@ -201,11 +201,18 @@ pass_args_to_script <- function(drv, ..., temp_file, app_host, app_port, rstudio
   if (rstudio_dark_theme) {
     script_code[[3]] <- sub('rstudio_theme_mode <- "light"', 'rstudio_theme_mode <- "dark"', script_code[[3]], fixed = TRUE)
   }
-  script_code[[1]] <- paste0("setwd(", '"', wd, '"', ")")
+  script_code[[1]] <- paste0("setwd(", '"', tools::file_path_as_absolute(wd), '"', ")")
   writeLines(script_code, temp_file)
 }
 
-run_bg_job <- function(temp_file, app_host, app_port) {
+#' Run Background Job
+#'
+#' @param temp_file path to r script to run.
+#'
+#' @return
+#' Side effect - run script as background job.
+#' @noRd
+run_bg_job <- function(temp_file) {
   rstudioapi::jobRunScript(temp_file, importEnv = FALSE)
 }
 

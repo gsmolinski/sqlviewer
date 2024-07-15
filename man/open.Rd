@@ -24,7 +24,7 @@ open(
 
 \item{save_temp_path_to}{where to save \emph{path} to temporary file? Defaults to \code{""}, meaning no saving. Argument passed to \code{\link[base:cat]{base::cat()}} to \code{file} parameter. See \emph{Security} section for details.}
 
-\item{wd}{working directory (character vector length 1) of the calling function. See \emph{Details} section.}
+\item{wd}{working directory (character vector length 1). See \emph{Details} section.}
 }
 \value{
 Used for side effect: to run app as a background job.
