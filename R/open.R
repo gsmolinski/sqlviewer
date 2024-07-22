@@ -7,12 +7,20 @@
 #' @param ... other database driver arguments passed to `[DBI::dbConnect()]`. See that function for details.
 #' @param app_host IPv4 address (character vector length 1) on which application should listen on. Defaults to `"127.0.0.1"` (localhost). Argument passed to `[shiny::shinyApp()]`.
 #' @param app_port TCP port (integer vector length 1) on which application should listen on. Defaults to `49152`. Argument passed to `[shiny::shinyApp()]`.
-#' @param launch_browser launch browser when app starts? Must be logical length 1. Defaults to `FALSE`. Argument passed to `[shiny::shinyApp()]`.
+#' @param launch_browser launch browser when app starts? Must be logical length 1. Defaults to `FALSE`. Argument passed to `[shiny::shinyApp()]`. Use `.rs.invokeShinyPaneViewer`
+#' object as an argument to open in RStudio Viewer.
 #'
 #' @return
-#' Runs app.
+#' Used for side effect - runs app.
 #'
-#' #' @section App Functionality:
+#' @details
+#' `sqlviewer` can be currently used only to retrieve data from DB, i.e. only `SELECT` queries are allowed (SQL code to run is passed to
+#' `[DBI::dbGetQuery()]`).
+#'
+#' To run app in parallel mode (each query will be run in separate process), call `[future::plan()]` with chosen strategy before
+#' calling `sqlviewer::open()`. See *Examples* and *App Functionality* sections for more details.
+#'
+#' @section App Functionality:
 #' To insert query into app, copy-paste it to clipboard (it is possible to copy more than one query at a time, then more than one table will be displayed).
 #' App will insert queries only if clipboard content changed from
 #' previous insertion (e.g. if the same content is copied twice in a row, query won't be re-inserted). Each query must be named
@@ -38,7 +46,7 @@
 #' -- #label
 #' }
 #' where instead of `label` should be unique query name (see *Example* section below or *Piping* section). **To be valid, label must be
-#' constructed using only: letters, numbers and underscores.**
+#' constructed using only: letters, numbers and underscores.
 #' Label can be used later for piping and will be used when displaying results of queries in the app.
 #' @section Piping:
 #' SQL queries can be very complex, especially when using nested queries. `sqlviewer` comes with the functionality to pipe one
@@ -70,6 +78,7 @@
 #' conn <- DBI::dbConnect(RSQLite::SQLite(), dbname = temp_db)
 #' DBI::dbWriteTable(conn, "iris", iris)
 #' DBI::dbDisconnect(conn)
+#' future::plan("multisession") # run app in parallel mode
 #' sqlviewer::open(RSQLite::SQLite(), dbname = temp_db)
 #' # Now, copy SQL statement to clipboard (without comment signs!) and include label (-- #all_data)
 #' #
@@ -90,18 +99,17 @@ open <- function(drv, ..., launch_browser = FALSE, app_host = "127.0.0.1", app_p
                                                               character(1),
                                                               dot_args), collapse = ", "),
                                        ")"))
-  app <- shinyApp(set_ui(),
-                  set_server(conn),
-                  options = list(launch.browser = launch_browser,
-                                 host = app_host,
-                                 port = app_port))
-  runApp(app)
+  shinyApp(set_ui(),
+           set_server(conn),
+           options = list(launch.browser = launch_browser,
+                          host = app_host,
+                          port = app_port))
 }
 
 #' Prepare dot-dot-dot Arguments
 #'
-#' @param dot_arg_name names of arguments.
-#' @param dot_arg values of arguments.
+#' @param idx index.
+#' @param dot_args arguments from dot-dot-dot.
 #'
 #' @return
 #' character vector of length the same as input vectors.

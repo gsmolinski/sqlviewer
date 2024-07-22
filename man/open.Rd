@@ -7,52 +7,56 @@
 open(
   drv,
   ...,
+  launch_browser = FALSE,
   app_host = "127.0.0.1",
-  app_port = 49152,
-  save_temp_path_to = "",
-  wd = getwd()
+  app_port = 49152
 )
 }
 \arguments{
-\item{drv}{database driver call \emph{with} package name call, e.g. \code{RPostgres::Postgres()}. See \emph{Details} section.}
+\item{drv}{database driver passed to \verb{[DBI::dbConnect()]}.}
 
-\item{...}{other database driver arguments passed to \verb{[DBI::dbConnect()]}. See that function for details. \emph{Must be named}.}
+\item{...}{other database driver arguments passed to \verb{[DBI::dbConnect()]}. See that function for details.}
+
+\item{launch_browser}{launch browser when app starts? Must be logical length 1. Defaults to \code{FALSE}. Argument passed to \verb{[shiny::shinyApp()]}. Use \code{.rs.invokeShinyPaneViewer}
+object as an argument to open in RStudio Viewer.}
 
 \item{app_host}{IPv4 address (character vector length 1) on which application should listen on. Defaults to \code{"127.0.0.1"} (localhost). Argument passed to \verb{[shiny::shinyApp()]}.}
 
 \item{app_port}{TCP port (integer vector length 1) on which application should listen on. Defaults to \code{49152}. Argument passed to \verb{[shiny::shinyApp()]}.}
-
-\item{save_temp_path_to}{where to save \emph{path} to temporary file? Defaults to \code{""}, meaning no saving. Argument passed to \code{\link[base:cat]{base::cat()}} to \code{file} parameter. See \emph{Security} section for details.}
-
-\item{wd}{working directory (character vector length 1). See \emph{Details} section.}
 }
 \value{
-Used for side effect: to run app as a background job.
+Used for side effect - runs app.
 }
 \description{
-Runs \code{shiny} application as a background job with the functionality provided by \code{sqlviewer}:
+Runs \code{shiny} application with the functionality provided by \code{sqlviewer}:
 preview SQL queries and construct complex queries using solution inspired by pipe operator.
 }
 \details{
-To establish connection with database using \verb{[DBI::dbConnect()]}, it is necessary to provide
-database driver (as well as other arguments which are needed by specific driver. \emph{These arguments must be named}). However,
-implementation of \code{sqlviewer} expects that driver will be provided along with the package name.
-As an example, if one would like to connect with the PostgreSQL database and use package \code{RPostgres} for that,
-then it would be necessary to pass an argument: \verb{[RPostgres::Postgres()]}. Tt is also expected that database package from which driver is used,
-will be installed. In other words, if using \code{RPostgres} package (or any other database specific package), this package must be installed on machine.
+\code{sqlviewer} can be currently used only to retrieve data from DB, i.e. only \code{SELECT} queries are allowed (SQL code to run is passed to
+\verb{[DBI::dbGetQuery()]}).
 
-Currently, it is not possible to construct function that will close background job. To close the app, one
-must go to 'Background Jobs' pane and press 'STOP' button or close the main R session, so all child R sessions
-(including background jobs) will be closed as well.
-
-To run background job, temporary R script is created (in temporary location). If one passes object for which it is relevant
-what is \strong{current} working directory (like relative path to database), then it is necessary to set proper working directory
-in temporary script. By default it will be working directory returned by \verb{[getwd()]} and in most cases should just work.
+To run app in parallel mode (each query will be run in separate process), call \verb{[future::plan()]} with chosen strategy before
+calling \code{sqlviewer::open()}. See \emph{Examples} and \emph{App Functionality} sections for more details.
 }
-\section{Running SQL Queries}{
+\section{App Functionality}{
 
-To run SQL query, simply copy statements with labels (see \emph{Labeling} section) to clipboard (ensure switch input to observe clipboard is on) and \code{sqlviewer} will run
-the code and display result as a table. You can copy more than one query at a time, then more than one table will be displayed.
+To insert query into app, copy-paste it to clipboard (it is possible to copy more than one query at a time, then more than one table will be displayed).
+App will insert queries only if clipboard content changed from
+previous insertion (e.g. if the same content is copied twice in a row, query won't be re-inserted). Each query must be named
+and \strong{if some names of queries are duplicated, then app won't run}.
+
+Switch button is used to indicate if clipboard should be observed. If set to off, then all
+existing queries will be removed and no new queries will be created. To see result for chosen query,
+click on its name. To copy query - click copy button - and to remove query, click remove button. When
+query is removed, it is also copied to clipboard.
+
+Each query is run in separate process using \verb{[shiny::ExtendedTask]} and when the query is running, app will not
+allow to re-run the same query with the one exception - if the query was re-inserted to the app (copy-pasted again
+to clipboard), then it will be possible to run this query - it will run in the new process, which means that previously
+started query is still running. Unfortunately, it is impossible to kill process started by \verb{[shiny::ExtendedTask]} and if
+one would need to do this, the only solution is to restart main R session.
+
+\code{sqlviewer} displays only first 1000 rows of table.
 }
 
 \section{Labeling}{
@@ -89,52 +93,21 @@ in the line where pipe operator was used. It is not necessary to write queries f
 can be below query into which this nested query will be piped.
 }
 
-\section{App Functionality}{
-
-To insert query into app, copy-paste it to clipboard. App will insert queries only if clipboard content changed from
-previous insertion (e.g. if the same content is copied twice in a row, query won't be re-inserted). Each query must be named
-and \strong{if some names of queries are duplicated, then app won't run}.
-
-Switch button is used to indicate if clipboard should be observed. If set to off, then all
-existing queries will be removed and no new queries will be created. To see result for chosen query,
-click on its name. To copy query - click copy button - and to remove query, click remove button. When
-query is removed, it is also copied to clipboard.
-
-Each query is run in separate process using \verb{[shiny::ExtendedTask]} and when the query is running, app will not
-allow to re-run the same query with the one exception - if the query was re-inserted to the app (copy-pasted again
-to clipboard), then it will be possible to run this query - it will run in the new process, which means that previously
-started query is still running. Unfortunately, it is impossible to kill process started by \verb{[shiny::ExtendedTask]} and if
-one would need to do this, the only solution is to restart main R session.
-
-\code{sqlviewer} displays only first 1000 rows of table.
-}
-
-\section{Security}{
-
-User should be aware that password to database passed as an argument is stored
-in temporary file (R script) as a plain text, i.e. even if password was passed as a variable, in
-temporary file value of this variable will be used. This is needed to run script as
-background job and immediately after running background job, temporary file is removed.
-However, it may happen due to some errors during function execution (e.g. not reaching the code line which removes
-file, because machine was shut down during code execution) that file won't be removed. To know where
-the R script was saved (to be able to remove it manually later), one can pass character vector length 1 argument to
-\code{save_temp_path_to} parameter - temporary path will be saved there.
-}
-
 \examples{
+
 \dontrun{
 temp_db <- fs::file_temp("sqlviewerDB_example", ext = ".db")
 conn <- DBI::dbConnect(RSQLite::SQLite(), dbname = temp_db)
 DBI::dbWriteTable(conn, "iris", iris)
 DBI::dbDisconnect(conn)
+future::plan("multisession") # run app in parallel mode
 sqlviewer::open(RSQLite::SQLite(), dbname = temp_db)
 # Now, copy SQL statement to clipboard (without comment signs!) and include label (-- #all_data)
 #
 # -- #all_data
 # SELECT * FROM iris;
 #
-# and see result in Viewer.
-# To finish, press 'STOP' button in Background Jobs pane.
+# and see result.
 file.remove(temp_db)
 }
 }
