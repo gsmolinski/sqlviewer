@@ -14,7 +14,7 @@ prepare_content_to_evaluate <- function(current_content) {
 
 #' Put Queries Into data.frame And Mark Where Query Starts
 #'
-#' @param content content from clipboard.
+#' @param queries data.table.
 #'
 #' @return
 #' data.table with two columns: part of sql query and group
@@ -23,11 +23,9 @@ prepare_content_to_evaluate <- function(current_content) {
 #' it is necessary later to call e.g. `data.table::setnafill`.
 #' This function also removes completely empty lines.
 #' @noRd
-mark_separate_queries <- function(content) {
+mark_separate_queries <- function(queries) {
   group <- query <- NULL
 
-  queries <- data.table(query = content,
-                        group = NA_integer_)
   queries[stringi::stri_detect_regex(query, "^\\s*--\\s*#\\s*[a-zA-Z0-9_]+\\s*$"),
           group := .I]
   queries[query != ""]
@@ -83,17 +81,18 @@ check_no_duplicated_names <- function(queries_names) {
 #' @noRd
 mark_nested_queries <- function(queries_df, queries_names) {
   nested_query <- group <- query <- NULL
-
   pattern <- stringi::stri_c(stringi::stri_c("^\\s*--\\s*\\|>\\s*#?\\s*", queries_names, "\\s*$", collapse = "|"), collapse = "|")
   queries_df[is.na(group),
-             nested_query := fifelse(stringi::stri_detect_regex(query, pattern),
+             nested_tmp_query := fifelse(stringi::stri_detect_regex(query, pattern),
                                      stringi::stri_replace_all_regex(query, "-|>|#|\\s|\\|", ""),
                                      NA_character_)][
-                                       !is.na(nested_query),
-                                       nested_query := vapply(nested_query, \(e) as.character(which(queries_names == e)), FUN.VALUE = character(1))
+                                       !is.na(nested_tmp_query),
+                                       nested_tmp_query := vapply(nested_tmp_query, \(e) as.character(which(queries_names == e)), FUN.VALUE = character(1))
                                      ][,
-                                       nested_query := as.integer(nested_query)
-                                     ]
+                                       nested_query := as.integer(nested_tmp_query)
+                                     ][,
+                                       nested_tmp_query := NULL
+                                       ]
   setnafill(queries_df, "locf", cols = "group")
 }
 
@@ -220,4 +219,23 @@ resolve_queries <- function(queries_order, queries, queries_names) {
 #' @noRd
 collapse_query <- function(query) {
   stringi::stri_c(query, collapse = "\n")
+}
+
+#' Remove Queries Which User Rerun
+#'
+#' @param new_queries_names new queries names.
+#' @param queries_tbl data.table with all data to resolve queries.
+#'
+#' @return
+#' data.table with three cols.
+#' @noRd
+remove_chosen_existing_queries <- function(new_queries_names, queries_tbl) {
+  group <- NULL
+  queries_tbl_names <- queries_tbl[, .SD[1], by = group][, query := stringi::stri_replace_all_regex(query, "-|\\s|#", "")]
+  queries_to_rm <- unlist(lapply(new_queries_names, \(e) queries_tbl_names[query == e][["group"]]), use.names = FALSE)
+  if (length(queries_to_rm) > 0) {
+    queries_tbl[!group %in% queries_to_rm]
+  } else {
+    queries_tbl
+  }
 }

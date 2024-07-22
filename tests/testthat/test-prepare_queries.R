@@ -35,6 +35,10 @@ test_that("mark_separate_queries works with or without piping", {
                      ")", "", "--#another_filtered_data ",
                      "SELECT *", "FROM iris i", "WHERE i.Species IN (", "\t\t\t\t\t-- |> table1",
                      "\t\t\t\t\t);")
+  sql_no_pipe <- data.table(query = sql_no_pipe,
+                            group = NA_integer_)
+  sql_with_pipe <- data.table(query = sql_with_pipe,
+                              group = NA_integer_)
   result_no_pipe <- mark_separate_queries(sql_no_pipe)
   result_with_pipe <- mark_separate_queries(sql_with_pipe)
 
@@ -68,6 +72,8 @@ test_that("mark_nested_queries correctly finds nested queries", {
                      "SELECT *", "FROM iris i", "WHERE i.Species IN (", "\t\t\t\t\t-- |> table1",
                      "\t\t\t\t\t);")
   queries_names <- get_queries_names(sql_with_pipe)
+  sql_with_pipe <- data.table(query = sql_with_pipe,
+                              group = NA_integer_)
   queries_df <- mark_separate_queries(sql_with_pipe)
   result <- mark_nested_queries(queries_df, queries_names)
   expect_length(result, 3)
@@ -120,6 +126,9 @@ test_that("resolve_queries inserts correct queries into nested objects and retur
                      "SELECT *", "FROM iris i", "WHERE i.Species IN (", "\t\t\t\t\t-- |> table1",
                      "\t\t\t\t\t);")
   queries_names <- get_queries_names(sql_with_pipe)
+  sql_with_pipe <- data.table(query = sql_with_pipe,
+                              group = NA_integer_,
+                              nested_query = NA_integer_)
   queries_df <- mark_separate_queries(sql_with_pipe)
   queries_df <- mark_nested_queries(queries_df, queries_names)
   queries_order <- order_connected_queries(queries_df)
