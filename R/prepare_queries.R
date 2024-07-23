@@ -227,10 +227,11 @@ collapse_query <- function(query) {
 #' @param queries_tbl data.table with all data to resolve queries.
 #'
 #' @return
-#' data.table with three cols.
+#' data.table.
 #' @noRd
 remove_chosen_existing_queries <- function(new_queries_names, queries_tbl) {
   group <- NULL
+
   queries_tbl_names <- queries_tbl[, .SD[1], by = group][, query := stringi::stri_replace_all_regex(query, "-|\\s|#", "")]
   queries_to_rm <- unlist(lapply(new_queries_names, \(e) queries_tbl_names[query == e][["group"]]), use.names = FALSE)
   if (length(queries_to_rm) > 0) {

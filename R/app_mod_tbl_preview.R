@@ -47,7 +47,7 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       })
 
       observe({
-        invalidateLater(1000)
+        invalidateLater(500)
         req(observe_clipboard())
         current_content <- req(suppressWarnings(clipr::read_clip(allow_non_interactive = TRUE))) # suppress warning if no content in clipboard
         req(prepare_content_to_evaluate(current_content))

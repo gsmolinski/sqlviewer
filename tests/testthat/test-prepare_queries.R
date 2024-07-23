@@ -140,3 +140,28 @@ test_that("resolve_queries inserts correct queries into nested objects and retur
                     table1 = "-- # table1\nSELECT *\nFROM (\n\t\t--#all_species\n\t\tSELECT i.Species\n\t\tFROM iris i\n)",
                     another_filtered_data = "--#another_filtered_data \nSELECT *\nFROM iris i\nWHERE i.Species IN (\n\t\t\t\t\t-- # table1\n\t\t\t\t\tSELECT *\n\t\t\t\t\tFROM (\n\t\t\t\t\t\t\t--#all_species\n\t\tSELECT i.Species\n\t\tFROM iris i\n\t\t\t\t\t)\n\t\t\t\t\t);"))
 })
+
+test_that("remove_chosen_existing_queries removes query from dt", {
+  sql_with_pipe <- c("-- #get_all", "SELECT *", "FROM iris;", "", "--#all_species",
+                     "SELECT i.Species", "FROM iris i;", "", "--#filtered_data", "SELECT *",
+                     "FROM iris i", "WHERE i.Species IN (", "\t\t\t\t\t-- |> all_species",
+                     "\t\t\t\t\t);", "", "-- # table1", "SELECT *", "FROM (", "\t\t-- |> all_species",
+                     ")", "", "--#another_filtered_data ",
+                     "SELECT *", "FROM iris i", "WHERE i.Species IN (", "\t\t\t\t\t-- |> table1",
+                     "\t\t\t\t\t);")
+  sql_with_pipe <- data.table(query = sql_with_pipe,
+                              group = NA_integer_,
+                              nested_query = NA_integer_)
+  queries_df <- mark_separate_queries(sql_with_pipe)
+  queries_df <- mark_nested_queries(queries_df, get_queries_names(sql_with_pipe$query))
+  queries_df <- remove_chosen_existing_queries(c("get_all", "table1"), queries_df)
+  expect_equal(queries_df,
+               structure(list(query = c("--#all_species", "SELECT i.Species",
+                                        "FROM iris i;", "--#filtered_data", "SELECT *", "FROM iris i",
+                                        "WHERE i.Species IN (", "\t\t\t\t\t-- |> all_species", "\t\t\t\t\t);",
+                                        "--#another_filtered_data ", "SELECT *", "FROM iris i", "WHERE i.Species IN (",
+                                        "\t\t\t\t\t-- |> table1", "\t\t\t\t\t);"),
+                              group = c(2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L, 3L, 5L, 5L, 5L, 5L, 5L, 5L),
+                              nested_query = c(NA, NA, NA, NA, NA, NA, NA, 2L, NA, NA, NA, NA, NA, 4L, NA)),
+                         row.names = c(NA, -15L), class = c("data.table", "data.frame")))
+})
