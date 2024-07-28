@@ -115,9 +115,9 @@ open <- function(drv, ..., launch_browser = FALSE, app_host = "127.0.0.1", app_p
 #' character vector of length the same as input vectors.
 #' @noRd
 resolve_dot_dot_dot <- function(idx, dot_args) {
-  if (is.null(names(dot_args[[idx]])) || is.na(names(dot_args[[idx]])) || names(dot_args[[idx]]) == "") {
+  if (is.null(names(dot_args)[[idx]]) || is.na(names(dot_args)[[idx]]) || names(dot_args)[[idx]] == "") {
     deparse(dot_args[[idx]])
   } else {
-    stringi::stri_c(names(dot_args[[idx]]), " = ", deparse(dot_args[[idx]]))
+    stringi::stri_c(names(dot_args)[[idx]], " = ", deparse(dot_args[[idx]]))
   }
 }
