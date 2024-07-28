@@ -26,10 +26,10 @@
 #' previous insertion (e.g. if the same content is copied twice in a row, query won't be re-inserted). Each query must be named
 #' and **if some names of queries are duplicated, then app won't run**.
 #'
-#' Switch button is used to indicate if clipboard should be observed. If set to off, then all
-#' existing queries will be removed and no new queries will be created. To see result for chosen query,
-#' click on its name. To copy query - click copy button - and to remove query, click remove button. When
-#' query is removed, it is also copied to clipboard.
+#' Switch button is used to indicate if clipboard should be observed. If set to off, then
+#' no new queries will be created. To see result for chosen query, click on its name.
+#' To copy query - click copy button - and to remove query, click remove button.
+#' When query is removed, it is also copied to clipboard.
 #'
 #' Each query is run in separate process using `[shiny::ExtendedTask]` and when the query is running, app will not
 #' allow to re-run the same query with the one exception - if the query was re-inserted to the app (copy-pasted again
@@ -46,7 +46,7 @@
 #' -- #label
 #' }
 #' where instead of `label` should be unique query name (see *Example* section below or *Piping* section). **To be valid, label must be
-#' constructed using only: letters, numbers and underscores.
+#' constructed using only: letters, numbers and underscores.**
 #' Label can be used later for piping and will be used when displaying results of queries in the app.
 #' @section Piping:
 #' SQL queries can be very complex, especially when using nested queries. `sqlviewer` comes with the functionality to pipe one

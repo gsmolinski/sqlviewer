@@ -80,7 +80,7 @@ check_no_duplicated_names <- function(queries_names) {
 #' @import data.table
 #' @noRd
 mark_nested_queries <- function(queries_df, queries_names) {
-  nested_query <- group <- query <- NULL
+  nested_query <- group <- query <- nested_tmp_query <- NULL
   pattern <- stringi::stri_c(stringi::stri_c("^\\s*--\\s*\\|>\\s*#?\\s*", queries_names, "\\s*$", collapse = "|"), collapse = "|")
   queries_df[is.na(group),
              nested_tmp_query := fifelse(stringi::stri_detect_regex(query, pattern),
@@ -230,7 +230,7 @@ collapse_query <- function(query) {
 #' data.table.
 #' @noRd
 remove_chosen_existing_queries <- function(new_queries_names, queries_tbl) {
-  group <- NULL
+  group <- query <- NULL
 
   queries_tbl_names <- queries_tbl[, .SD[1], by = group][, query := stringi::stri_replace_all_regex(query, "-|\\s|#", "")]
   queries_to_rm <- unlist(lapply(new_queries_names, \(e) queries_tbl_names[query == e][["group"]]), use.names = FALSE)

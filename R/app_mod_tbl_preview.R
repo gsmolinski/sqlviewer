@@ -37,16 +37,6 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       queries <- reactiveValues()
 
       observe({
-        if (!isTruthy(observe_clipboard())) {
-          invisible(lapply(names(queries[["elements"]]), rm_ui_output_reactive, queries = queries, session = session, output = output))
-          invisible(lapply(names(queries[["elements"]]), remove_extended_task_fun, main_mod_envir = main_mod_envir))
-          queries_tbl(remove_chosen_existing_queries(names(queries[["elements"]]), queries_tbl()))
-          # this is necessary, because otherwise queries won't be re-run if user will copy the same queries
-          clipboard(NULL)
-        }
-      })
-
-      observe({
         invalidateLater(500)
         req(observe_clipboard())
         current_content <- req(suppressWarnings(clipr::read_clip(allow_non_interactive = TRUE))) # suppress warning if no content in clipboard
@@ -169,11 +159,11 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
                                                        style = "font-weight: 500"),
                              .selection = reactable::colDef(show = FALSE),
                              copy = reactable::colDef(name = "",
-                                                      cell = \() actionButton(stringi::stri_c(queries_name, "_copy_btn"), label = NULL, icon = icon("copy"), class = "btn-sm query_name_btn"),
+                                                      cell = \() actionButton(session$ns(stringi::stri_c(queries_name, "_copy_btn")), label = NULL, icon = icon("copy"), class = "btn-sm query_name_btn"),
                                                       align = "right",
                                                       maxWidth = 50),
                              remove = reactable::colDef(name = "",
-                                                        cell = \() actionButton(stringi::stri_c(queries_name, "_rm_btn"), label = NULL, icon = icon("trash"), class = "btn-sm query_name_btn"),
+                                                        cell = \() actionButton(session$ns(stringi::stri_c(queries_name, "_rm_btn")), label = NULL, icon = icon("trash"), class = "btn-sm query_name_btn"),
                                                         align = "left",
                                                         maxWidth = 50)
                            ),

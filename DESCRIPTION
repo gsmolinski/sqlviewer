@@ -20,18 +20,16 @@ Imports:
     clipr,
     data.table,
     DBI,
-    fs,
-    future,
     htmltools,
     htmlwidgets,
     igraph,
     promises,
     reactable,
-    rstudioapi,
     shiny,
     stringi,
-    tools
 Suggests: 
+    fs,
+    future,
     RSQLite,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

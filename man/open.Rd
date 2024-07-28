@@ -45,10 +45,10 @@ App will insert queries only if clipboard content changed from
 previous insertion (e.g. if the same content is copied twice in a row, query won't be re-inserted). Each query must be named
 and \strong{if some names of queries are duplicated, then app won't run}.
 
-Switch button is used to indicate if clipboard should be observed. If set to off, then all
-existing queries will be removed and no new queries will be created. To see result for chosen query,
-click on its name. To copy query - click copy button - and to remove query, click remove button. When
-query is removed, it is also copied to clipboard.
+Switch button is used to indicate if clipboard should be observed. If set to off, then
+no new queries will be created. To see result for chosen query, click on its name.
+To copy query - click copy button - and to remove query, click remove button.
+When query is removed, it is also copied to clipboard.
 
 Each query is run in separate process using \verb{[shiny::ExtendedTask]} and when the query is running, app will not
 allow to re-run the same query with the one exception - if the query was re-inserted to the app (copy-pasted again
