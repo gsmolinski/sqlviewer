@@ -1,0 +1,780 @@
+{
+  "output": {
+    "tbl_preview-tbl_test1": {
+      "x": {
+        "tag": {
+          "name": "Reactable",
+          "attribs": {
+            "data": {
+              "query": [
+                "test1"
+              ],
+              "copy": [
+                null
+              ],
+              "remove": [
+                null
+              ]
+            },
+            "columns": [
+              {
+                "id": ".selection",
+                "name": "",
+                "type": null,
+                "resizable": false,
+                "width": 45,
+                "selectable": true,
+                "show": false
+              },
+              {
+                "id": "query",
+                "name": "",
+                "type": "character",
+                "align": "left",
+                "vAlign": "center",
+                "style": {
+                  "font-weight": "500"
+                }
+              },
+              {
+                "id": "copy",
+                "name": "",
+                "type": "logical",
+                "cell": [
+                  {
+                    "name": "button",
+                    "attribs": {
+                      "id": "tbl_preview-test1_copy_btn",
+                      "type": "button",
+                      "className": "btn btn-default action-button btn-sm query_name_btn"
+                    },
+                    "children": [
+                      {
+                        "name": "i",
+                        "attribs": {
+                          "role": "presentation",
+                          "aria-label": "copy icon",
+                          "className": "far fa-copy"
+                        },
+                        "children": [
+
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "maxWidth": 50,
+                "align": "right"
+              },
+              {
+                "id": "remove",
+                "name": "",
+                "type": "logical",
+                "cell": [
+                  {
+                    "name": "button",
+                    "attribs": {
+                      "id": "tbl_preview-test1_rm_btn",
+                      "type": "button",
+                      "className": "btn btn-default action-button btn-sm query_name_btn"
+                    },
+                    "children": [
+                      {
+                        "name": "i",
+                        "attribs": {
+                          "role": "presentation",
+                          "aria-label": "trash icon",
+                          "className": "fas fa-trash"
+                        },
+                        "children": [
+
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "maxWidth": 50,
+                "align": "left"
+              }
+            ],
+            "sortable": false,
+            "pagination": false,
+            "selection": "single",
+            "onClick": "\n                                                     function(rowInfo, column) {\n                                                      if (column.id === 'copy') {\n                                                        Shiny.setInputValue('copy_query', rowInfo.values['query'], {priority: 'event'})\n                                                      } else if (column.id === 'remove'){\n                                                        Shiny.setInputValue('remove_query', rowInfo.values['query'], {priority: 'event'})\n                                                      } else {\n                                                        if (!rowInfo.isSelected) {\n                                                          Shiny.setInputValue('show_result', rowInfo.values['query'], {priority: 'event'});\n                                                          rowInfo.toggleRowSelected();\n                                                        } else {\n                                                          Shiny.setInputValue('hide_result', rowInfo.values['query'], {priority: 'event'});\n                                                          rowInfo.toggleRowSelected();\n                                                        }\n                                                      }\n                                                     }\n                                                     ",
+            "highlight": true,
+            "borderless": true,
+            "compact": true,
+            "nowrap": true,
+            "theme": {
+              "style": {
+                "html[data-bs-theme='dark'] &": {
+                  "color": "hsl(233, 9%, 87%)",
+                  "backgroundColor": "#1D1F21",
+                  "borderColor": "hsl(233, 9%, 22%)"
+                }
+              },
+              "headerStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "borderColor": "hsl(233, 9%, 22%)"
+                },
+                "borderWidth": "1px"
+              },
+              "rowHighlightStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 12%, 24%)"
+                }
+              },
+              "rowSelectedStyle": {
+                "boxShadow": "inset 2px 0 0 0 #007BC2"
+              },
+              "inputStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 9%, 25%)",
+                  "color": "hsl(233, 9%, 87%)"
+                }
+              },
+              "paginationStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "borderColor": "hsl(233, 9%, 22%)",
+                  "color": "hsl(233, 9%, 87%)"
+                }
+              },
+              "pageButtonHoverStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 9%, 25%)"
+                }
+              },
+              "pageButtonActiveStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 9%, 28%)"
+                }
+              }
+            },
+            "dataKey": "d163a5756bfe00a90ac315464e5ad486",
+            "static": false
+          },
+          "children": [
+
+          ]
+        },
+        "class": "reactR_markup"
+      },
+      "evals": [
+        "tag.attribs.onClick"
+      ],
+      "jsHooks": [
+
+      ],
+      "deps": [
+        {
+          "name": "font-awesome",
+          "version": "6.4.2",
+          "src": {
+            "href": "font-awesome-6.4.2"
+          },
+          "meta": null,
+          "script": null,
+          "stylesheet": [
+            "css/all.min.css",
+            "css/v4-shims.min.css"
+          ],
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "tbl_preview-tbl_test1_result": {
+      "x": null,
+      "evals": [
+
+      ],
+      "jsHooks": null,
+      "deps": [
+
+      ]
+    },
+    "tbl_preview-tbl_test2": {
+      "x": {
+        "tag": {
+          "name": "Reactable",
+          "attribs": {
+            "data": {
+              "query": [
+                "test2"
+              ],
+              "copy": [
+                null
+              ],
+              "remove": [
+                null
+              ]
+            },
+            "columns": [
+              {
+                "id": ".selection",
+                "name": "",
+                "type": null,
+                "resizable": false,
+                "width": 45,
+                "selectable": true,
+                "show": false
+              },
+              {
+                "id": "query",
+                "name": "",
+                "type": "character",
+                "align": "left",
+                "vAlign": "center",
+                "style": {
+                  "font-weight": "500"
+                }
+              },
+              {
+                "id": "copy",
+                "name": "",
+                "type": "logical",
+                "cell": [
+                  {
+                    "name": "button",
+                    "attribs": {
+                      "id": "tbl_preview-test2_copy_btn",
+                      "type": "button",
+                      "className": "btn btn-default action-button btn-sm query_name_btn"
+                    },
+                    "children": [
+                      {
+                        "name": "i",
+                        "attribs": {
+                          "role": "presentation",
+                          "aria-label": "copy icon",
+                          "className": "far fa-copy"
+                        },
+                        "children": [
+
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "maxWidth": 50,
+                "align": "right"
+              },
+              {
+                "id": "remove",
+                "name": "",
+                "type": "logical",
+                "cell": [
+                  {
+                    "name": "button",
+                    "attribs": {
+                      "id": "tbl_preview-test2_rm_btn",
+                      "type": "button",
+                      "className": "btn btn-default action-button btn-sm query_name_btn"
+                    },
+                    "children": [
+                      {
+                        "name": "i",
+                        "attribs": {
+                          "role": "presentation",
+                          "aria-label": "trash icon",
+                          "className": "fas fa-trash"
+                        },
+                        "children": [
+
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "maxWidth": 50,
+                "align": "left"
+              }
+            ],
+            "sortable": false,
+            "pagination": false,
+            "selection": "single",
+            "onClick": "\n                                                     function(rowInfo, column) {\n                                                      if (column.id === 'copy') {\n                                                        Shiny.setInputValue('copy_query', rowInfo.values['query'], {priority: 'event'})\n                                                      } else if (column.id === 'remove'){\n                                                        Shiny.setInputValue('remove_query', rowInfo.values['query'], {priority: 'event'})\n                                                      } else {\n                                                        if (!rowInfo.isSelected) {\n                                                          Shiny.setInputValue('show_result', rowInfo.values['query'], {priority: 'event'});\n                                                          rowInfo.toggleRowSelected();\n                                                        } else {\n                                                          Shiny.setInputValue('hide_result', rowInfo.values['query'], {priority: 'event'});\n                                                          rowInfo.toggleRowSelected();\n                                                        }\n                                                      }\n                                                     }\n                                                     ",
+            "highlight": true,
+            "borderless": true,
+            "compact": true,
+            "nowrap": true,
+            "theme": {
+              "style": {
+                "html[data-bs-theme='dark'] &": {
+                  "color": "hsl(233, 9%, 87%)",
+                  "backgroundColor": "#1D1F21",
+                  "borderColor": "hsl(233, 9%, 22%)"
+                }
+              },
+              "headerStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "borderColor": "hsl(233, 9%, 22%)"
+                },
+                "borderWidth": "1px"
+              },
+              "rowHighlightStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 12%, 24%)"
+                }
+              },
+              "rowSelectedStyle": {
+                "boxShadow": "inset 2px 0 0 0 #007BC2"
+              },
+              "inputStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 9%, 25%)",
+                  "color": "hsl(233, 9%, 87%)"
+                }
+              },
+              "paginationStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "borderColor": "hsl(233, 9%, 22%)",
+                  "color": "hsl(233, 9%, 87%)"
+                }
+              },
+              "pageButtonHoverStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 9%, 25%)"
+                }
+              },
+              "pageButtonActiveStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 9%, 28%)"
+                }
+              }
+            },
+            "dataKey": "362b9b730357ff568c11373482856cc5",
+            "static": false
+          },
+          "children": [
+
+          ]
+        },
+        "class": "reactR_markup"
+      },
+      "evals": [
+        "tag.attribs.onClick"
+      ],
+      "jsHooks": [
+
+      ],
+      "deps": [
+        {
+          "name": "font-awesome",
+          "version": "6.4.2",
+          "src": {
+            "href": "font-awesome-6.4.2"
+          },
+          "meta": null,
+          "script": null,
+          "stylesheet": [
+            "css/all.min.css",
+            "css/v4-shims.min.css"
+          ],
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "tbl_preview-tbl_test2_result": {
+      "x": null,
+      "evals": [
+
+      ],
+      "jsHooks": null,
+      "deps": [
+
+      ]
+    },
+    "tbl_preview-tbl_test4": {
+      "x": {
+        "tag": {
+          "name": "Reactable",
+          "attribs": {
+            "data": {
+              "query": [
+                "test4"
+              ],
+              "copy": [
+                null
+              ],
+              "remove": [
+                null
+              ]
+            },
+            "columns": [
+              {
+                "id": ".selection",
+                "name": "",
+                "type": null,
+                "resizable": false,
+                "width": 45,
+                "selectable": true,
+                "show": false
+              },
+              {
+                "id": "query",
+                "name": "",
+                "type": "character",
+                "align": "left",
+                "vAlign": "center",
+                "style": {
+                  "font-weight": "500"
+                }
+              },
+              {
+                "id": "copy",
+                "name": "",
+                "type": "logical",
+                "cell": [
+                  {
+                    "name": "button",
+                    "attribs": {
+                      "id": "tbl_preview-test4_copy_btn",
+                      "type": "button",
+                      "className": "btn btn-default action-button btn-sm query_name_btn"
+                    },
+                    "children": [
+                      {
+                        "name": "i",
+                        "attribs": {
+                          "role": "presentation",
+                          "aria-label": "copy icon",
+                          "className": "far fa-copy"
+                        },
+                        "children": [
+
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "maxWidth": 50,
+                "align": "right"
+              },
+              {
+                "id": "remove",
+                "name": "",
+                "type": "logical",
+                "cell": [
+                  {
+                    "name": "button",
+                    "attribs": {
+                      "id": "tbl_preview-test4_rm_btn",
+                      "type": "button",
+                      "className": "btn btn-default action-button btn-sm query_name_btn"
+                    },
+                    "children": [
+                      {
+                        "name": "i",
+                        "attribs": {
+                          "role": "presentation",
+                          "aria-label": "trash icon",
+                          "className": "fas fa-trash"
+                        },
+                        "children": [
+
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "maxWidth": 50,
+                "align": "left"
+              }
+            ],
+            "sortable": false,
+            "pagination": false,
+            "selection": "single",
+            "onClick": "\n                                                     function(rowInfo, column) {\n                                                      if (column.id === 'copy') {\n                                                        Shiny.setInputValue('copy_query', rowInfo.values['query'], {priority: 'event'})\n                                                      } else if (column.id === 'remove'){\n                                                        Shiny.setInputValue('remove_query', rowInfo.values['query'], {priority: 'event'})\n                                                      } else {\n                                                        if (!rowInfo.isSelected) {\n                                                          Shiny.setInputValue('show_result', rowInfo.values['query'], {priority: 'event'});\n                                                          rowInfo.toggleRowSelected();\n                                                        } else {\n                                                          Shiny.setInputValue('hide_result', rowInfo.values['query'], {priority: 'event'});\n                                                          rowInfo.toggleRowSelected();\n                                                        }\n                                                      }\n                                                     }\n                                                     ",
+            "highlight": true,
+            "borderless": true,
+            "compact": true,
+            "nowrap": true,
+            "theme": {
+              "style": {
+                "html[data-bs-theme='dark'] &": {
+                  "color": "hsl(233, 9%, 87%)",
+                  "backgroundColor": "#1D1F21",
+                  "borderColor": "hsl(233, 9%, 22%)"
+                }
+              },
+              "headerStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "borderColor": "hsl(233, 9%, 22%)"
+                },
+                "borderWidth": "1px"
+              },
+              "rowHighlightStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 12%, 24%)"
+                }
+              },
+              "rowSelectedStyle": {
+                "boxShadow": "inset 2px 0 0 0 #007BC2"
+              },
+              "inputStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 9%, 25%)",
+                  "color": "hsl(233, 9%, 87%)"
+                }
+              },
+              "paginationStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "borderColor": "hsl(233, 9%, 22%)",
+                  "color": "hsl(233, 9%, 87%)"
+                }
+              },
+              "pageButtonHoverStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 9%, 25%)"
+                }
+              },
+              "pageButtonActiveStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 9%, 28%)"
+                }
+              }
+            },
+            "dataKey": "82adfe072d6130223c3502a1ed469991",
+            "static": false
+          },
+          "children": [
+
+          ]
+        },
+        "class": "reactR_markup"
+      },
+      "evals": [
+        "tag.attribs.onClick"
+      ],
+      "jsHooks": [
+
+      ],
+      "deps": [
+        {
+          "name": "font-awesome",
+          "version": "6.4.2",
+          "src": {
+            "href": "font-awesome-6.4.2"
+          },
+          "meta": null,
+          "script": null,
+          "stylesheet": [
+            "css/all.min.css",
+            "css/v4-shims.min.css"
+          ],
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "tbl_preview-tbl_test4_result": {
+      "x": null,
+      "evals": [
+
+      ],
+      "jsHooks": null,
+      "deps": [
+
+      ]
+    },
+    "tbl_preview-tbl_test5": {
+      "x": {
+        "tag": {
+          "name": "Reactable",
+          "attribs": {
+            "data": {
+              "query": [
+                "test5"
+              ],
+              "copy": [
+                null
+              ],
+              "remove": [
+                null
+              ]
+            },
+            "columns": [
+              {
+                "id": ".selection",
+                "name": "",
+                "type": null,
+                "resizable": false,
+                "width": 45,
+                "selectable": true,
+                "show": false
+              },
+              {
+                "id": "query",
+                "name": "",
+                "type": "character",
+                "align": "left",
+                "vAlign": "center",
+                "style": {
+                  "font-weight": "500"
+                }
+              },
+              {
+                "id": "copy",
+                "name": "",
+                "type": "logical",
+                "cell": [
+                  {
+                    "name": "button",
+                    "attribs": {
+                      "id": "tbl_preview-test5_copy_btn",
+                      "type": "button",
+                      "className": "btn btn-default action-button btn-sm query_name_btn"
+                    },
+                    "children": [
+                      {
+                        "name": "i",
+                        "attribs": {
+                          "role": "presentation",
+                          "aria-label": "copy icon",
+                          "className": "far fa-copy"
+                        },
+                        "children": [
+
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "maxWidth": 50,
+                "align": "right"
+              },
+              {
+                "id": "remove",
+                "name": "",
+                "type": "logical",
+                "cell": [
+                  {
+                    "name": "button",
+                    "attribs": {
+                      "id": "tbl_preview-test5_rm_btn",
+                      "type": "button",
+                      "className": "btn btn-default action-button btn-sm query_name_btn"
+                    },
+                    "children": [
+                      {
+                        "name": "i",
+                        "attribs": {
+                          "role": "presentation",
+                          "aria-label": "trash icon",
+                          "className": "fas fa-trash"
+                        },
+                        "children": [
+
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "maxWidth": 50,
+                "align": "left"
+              }
+            ],
+            "sortable": false,
+            "pagination": false,
+            "selection": "single",
+            "onClick": "\n                                                     function(rowInfo, column) {\n                                                      if (column.id === 'copy') {\n                                                        Shiny.setInputValue('copy_query', rowInfo.values['query'], {priority: 'event'})\n                                                      } else if (column.id === 'remove'){\n                                                        Shiny.setInputValue('remove_query', rowInfo.values['query'], {priority: 'event'})\n                                                      } else {\n                                                        if (!rowInfo.isSelected) {\n                                                          Shiny.setInputValue('show_result', rowInfo.values['query'], {priority: 'event'});\n                                                          rowInfo.toggleRowSelected();\n                                                        } else {\n                                                          Shiny.setInputValue('hide_result', rowInfo.values['query'], {priority: 'event'});\n                                                          rowInfo.toggleRowSelected();\n                                                        }\n                                                      }\n                                                     }\n                                                     ",
+            "highlight": true,
+            "borderless": true,
+            "compact": true,
+            "nowrap": true,
+            "theme": {
+              "style": {
+                "html[data-bs-theme='dark'] &": {
+                  "color": "hsl(233, 9%, 87%)",
+                  "backgroundColor": "#1D1F21",
+                  "borderColor": "hsl(233, 9%, 22%)"
+                }
+              },
+              "headerStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "borderColor": "hsl(233, 9%, 22%)"
+                },
+                "borderWidth": "1px"
+              },
+              "rowHighlightStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 12%, 24%)"
+                }
+              },
+              "rowSelectedStyle": {
+                "boxShadow": "inset 2px 0 0 0 #007BC2"
+              },
+              "inputStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 9%, 25%)",
+                  "color": "hsl(233, 9%, 87%)"
+                }
+              },
+              "paginationStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "borderColor": "hsl(233, 9%, 22%)",
+                  "color": "hsl(233, 9%, 87%)"
+                }
+              },
+              "pageButtonHoverStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 9%, 25%)"
+                }
+              },
+              "pageButtonActiveStyle": {
+                "html[data-bs-theme='dark'] &": {
+                  "backgroundColor": "hsl(233, 9%, 28%)"
+                }
+              }
+            },
+            "dataKey": "59c964c6a48ae4e638c851b15b89e5be",
+            "static": false
+          },
+          "children": [
+
+          ]
+        },
+        "class": "reactR_markup"
+      },
+      "evals": [
+        "tag.attribs.onClick"
+      ],
+      "jsHooks": [
+
+      ],
+      "deps": [
+        {
+          "name": "font-awesome",
+          "version": "6.4.2",
+          "src": {
+            "href": "font-awesome-6.4.2"
+          },
+          "meta": null,
+          "script": null,
+          "stylesheet": [
+            "css/all.min.css",
+            "css/v4-shims.min.css"
+          ],
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "tbl_preview-tbl_test5_result": {
+      "x": null,
+      "evals": [
+
+      ],
+      "jsHooks": null,
+      "deps": [
+
+      ]
+    }
+  }
+}
