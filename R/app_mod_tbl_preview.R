@@ -86,8 +86,8 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       main_mod_envir <- function() {} # we use this just to reference to *this* environment
 
       observe({
+        session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", show_result(), "_result")))
         if (eval(parse(text = stringi::stri_c("ext_task_", show_result(), "$status()"))) != "running") {
-          session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", show_result(), "_result")))
           eval(parse(text = stringi::stri_c("ext_task_", show_result(), "$invoke(conn, queries[['elements']][['", show_result(), "']][['query']])")))
         }
       }) |>
@@ -202,7 +202,7 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
 
     output[[stringi::stri_c("tbl_", queries_name, "_result")]] <- reactable::renderReactable({
         if (eval(parse(text = stringi::stri_c("ext_task_", queries_name, "$status()")), envir = environment(main_mod_envir)) == "initial") {
-          NULL
+          session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
         } else {
           display_tbl(eval(parse(text = stringi::stri_c("ext_task_", queries_name, "$result()")), envir = environment(main_mod_envir)),
                       color_theme = add_reactable_theme())

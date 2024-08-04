@@ -15,6 +15,9 @@ set_ui <- function() {
     ),
     lang = "en",
     theme = bs_theme(5),
+    useBusyIndicators(),
+    busyIndicatorOptions(spinner_selector = "html", fade_selector = "html",
+                         pulse_background = "#007BC2", spinner_type = "dots"),
     htmltools::tags$div(id = "sqlviewer_header",
       input_switch("observe_clipboard", NULL, value = TRUE),
       input_dark_mode(id = "sqlviewer_color_mode")
