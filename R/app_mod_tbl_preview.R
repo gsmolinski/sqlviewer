@@ -86,8 +86,9 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       main_mod_envir <- function() {} # we use this just to reference to *this* environment
 
       observe({
-        session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", show_result(), "_result")))
         if (eval(parse(text = stringi::stri_c("ext_task_", show_result(), "$status()"))) != "running") {
+          session$sendCustomMessage("show_result", session$ns(stringi::stri_c("tbl_", show_result(), "_result")))
+          session$sendCustomMessage("add_running_class", session$ns(stringi::stri_c("tbl_", show_result())))
           eval(parse(text = stringi::stri_c("ext_task_", show_result(), "$invoke(conn, queries[['elements']][['", show_result(), "']][['query']])")))
         }
       }) |>
@@ -182,11 +183,15 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
                                                         Shiny.setInputValue('remove_query', rowInfo.values['query'], {priority: 'event'})
                                                       } else {
                                                         if (!rowInfo.isSelected) {
-                                                          Shiny.setInputValue('show_result', rowInfo.values['query'], {priority: 'event'});
-                                                          rowInfo.toggleRowSelected();
+                                                          if (!document.getElementById('tbl_preview-tbl_' + rowInfo.values['query']).classList.contains('sqlviewer_running')) {
+                                                            Shiny.setInputValue('show_result', rowInfo.values['query'], {priority: 'event'});
+                                                            rowInfo.toggleRowSelected();
+                                                          }
                                                         } else {
-                                                          Shiny.setInputValue('hide_result', rowInfo.values['query'], {priority: 'event'});
-                                                          rowInfo.toggleRowSelected();
+                                                          if (!document.getElementById('tbl_preview-tbl_' + rowInfo.values['query']).classList.contains('sqlviewer_running')) {
+                                                            Shiny.setInputValue('hide_result', rowInfo.values['query'], {priority: 'event'});
+                                                            rowInfo.toggleRowSelected();
+                                                          }
                                                         }
                                                       }
                                                      }
@@ -204,6 +209,9 @@ insert_ui_output <- function(queries_name, queries, session, conn, input, output
         if (eval(parse(text = stringi::stri_c("ext_task_", queries_name, "$status()")), envir = environment(main_mod_envir)) == "initial") {
           session$sendCustomMessage("hide_result", session$ns(stringi::stri_c("tbl_", queries_name, "_result")))
         } else {
+          if (eval(parse(text = stringi::stri_c("ext_task_", queries_name, "$status()")), envir = environment(main_mod_envir)) != "running") {
+            session$sendCustomMessage("rm_running_class", session$ns(stringi::stri_c("tbl_", queries_name)))
+          }
           display_tbl(eval(parse(text = stringi::stri_c("ext_task_", queries_name, "$result()")), envir = environment(main_mod_envir)),
                       color_theme = add_reactable_theme())
         }
