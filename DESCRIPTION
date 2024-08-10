@@ -3,13 +3,12 @@ Title: Make SQL Queries Viewable and Pipeable
 Version: 0.0.0.9000
 Authors@R: 
     person("Grzegorz", "Smoliński", , "g.smolinski1@gmail.com", role = c("aut", "cre"))
-Description: In RStudio IDE one can connect to database using
-    'Connections' pane and then write SQL queries in '.sql' file
-    associated with this connection. However, current previewer allows to
-    see the result only from one query in the whole file (not possible to
-    execute code query-by-query). With 'sqlviewer' it is possible to see
-    the results from multiple queries and to combine multiple queries into
-    one query using the construct inspired by the pipe operator.
+Description: A 'shiny' app to run SQL queries against provided datatabse
+    connection. It supports running more than one query at a time and
+    displays results from multiple queries. Additionally, it helps to
+    construct complex queries, providing pipe-inspired operator, what can
+    be used to improve debugging experience as well (that makes possible
+    to see results from temporary tables).
 License: MIT + file LICENSE
 URL: https://github.com/gsmolinski/sqlviewer
 BugReports: https://github.com/gsmolinski/sqlviewer/issues

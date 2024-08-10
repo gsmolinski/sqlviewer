@@ -18,7 +18,8 @@ set_ui <- function() {
     useBusyIndicators(),
     busyIndicatorOptions(spinner_selector = "html", fade_selector = "html", spinner_type = "dots"),
     htmltools::tags$div(id = "sqlviewer_header",
-      input_switch("observe_clipboard", NULL, value = TRUE),
+      input_switch("observe_clipboard", NULL, value = TRUE) |>
+        tooltip("Observe cipboard?", placement = "right"),
       input_dark_mode(id = "sqlviewer_color_mode")
       ),
     tbl_preview_UI("tbl_preview")
