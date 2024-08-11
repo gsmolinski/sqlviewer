@@ -21,10 +21,7 @@ construct complex queries. The main three goals are:
   queries;
 - help construct complex queries;
 
-<figure>
-<img src="./sqlviewer.gif" alt="sqlviewer GIF" />
-<figcaption aria-hidden="true">sqlviewer GIF</figcaption>
-</figure>
+![](./sqlviewer.gif)
 
 ## Installation
 

@@ -27,7 +27,7 @@ knitr::opts_chunk$set(
 - bring better debug experience by displaying results from temporary queries;
 - help construct complex queries;
 
-![sqlviewer GIF](./sqlviewer.gif)
+![](./sqlviewer.gif)
 
 ## Installation
 
