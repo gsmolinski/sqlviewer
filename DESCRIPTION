@@ -3,12 +3,12 @@ Title: Make SQL Queries Viewable and Pipeable
 Version: 0.0.0.9000
 Authors@R: 
     person("Grzegorz", "Smoliński", , "g.smolinski1@gmail.com", role = c("aut", "cre"))
-Description: A 'shiny' app to run SQL queries against provided datatabse
+Description: A 'shiny' app to run SQL queries against provided database
     connection. It supports running more than one query at a time and
     displays results from multiple queries. Additionally, it helps to
     construct complex queries, providing pipe-inspired operator, what can
-    be used to improve debugging experience as well (that makes possible
-    to see results from temporary tables).
+    be used to improve debugging experience as well (by making possible to
+    see results from temporary tables).
 License: MIT + file LICENSE
 URL: https://github.com/gsmolinski/sqlviewer
 BugReports: https://github.com/gsmolinski/sqlviewer/issues
