@@ -57,11 +57,13 @@
       ]
     },
     "tbl_preview-tbl_test5_result": {
-      "message": "",
-      "call": "NULL",
-      "type": [
-        "shiny.silent.error",
-        "validation"
+      "x": null,
+      "evals": [
+
+      ],
+      "jsHooks": null,
+      "deps": [
+
       ]
     }
   }
