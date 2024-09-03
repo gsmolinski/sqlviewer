@@ -18,6 +18,7 @@ tbl_preview_UI <- function(id) {
 #' @param conn connection to database.
 #' @param clipboard_mode should we use clipr::write_clipboard or JS to write to clipboard?
 #' @param observe_clipboard reactive input TRUE/FALSE: should we observe clipboard?
+#' @param rerun_btn button to rerun previous selection.
 #' @param js_clipboard clipboard content read by JS function.
 #' @param copy_query input from JS - query name copied by user.
 #' @param remove_query input from JS - query name to remove chosen by user.
@@ -27,7 +28,7 @@ tbl_preview_UI <- function(id) {
 #' @return
 #' server function.
 #' @noRd
-tbl_preview_server <- function(id, conn, clipboard_mode, observe_clipboard, js_clipboard, copy_query, remove_query, show_result, hide_result) {
+tbl_preview_server <- function(id, conn, clipboard_mode, observe_clipboard, rerun_btn, js_clipboard, copy_query, remove_query, show_result, hide_result) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -83,7 +84,7 @@ tbl_preview_server <- function(id, conn, clipboard_mode, observe_clipboard, js_c
         # insert UI and output only if not already inserted
         invisible(lapply(sort(names(queries[["elements"]])), insert_ui_output, queries = queries, session = session, conn = conn, input = input, output = output, main_mod_envir = main_mod_envir))
       }) |>
-        bindEvent(clipboard())
+        bindEvent(clipboard(), rerun_btn())
 
       observe({
         req(hide_result())

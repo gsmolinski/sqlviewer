@@ -5,6 +5,14 @@
   margin-bottom: auto;
 }
 
+#observe_clipboard {
+  margin-top: 0.4rem;
+}
+
+#div_rerun {
+  margin-left: 1% !important;
+}
+
 #sqlviewer_color_mode {
   margin-left: auto;
 }

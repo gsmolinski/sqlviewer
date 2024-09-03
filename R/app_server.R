@@ -14,6 +14,7 @@ set_server <- function(conn, clipboard_mode) {
   function(input, output, session) {
     tbl_preview_server("tbl_preview", conn, clipboard_mode,
                        observe_clipboard = reactive({input$observe_clipboard}),
+                       rerun_btn = reactive({input$rerun}),
                        js_clipboard = reactive({input$js_clipboard}),
                        copy_query = reactive({input$copy_query}),
                        remove_query = reactive({input$remove_query}),

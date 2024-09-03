@@ -20,6 +20,11 @@ set_ui <- function() {
     htmltools::tags$div(id = "sqlviewer_header",
       input_switch("observe_clipboard", NULL, value = TRUE) |>
         tooltip("Observe cipboard?", placement = "right"),
+      htmltools::tags$div(id = "div_rerun",
+        actionButton("rerun", NULL, icon = icon("repeat", class = "solid")) |>
+          tagAppendAttributes(class = "btn-sm") |>
+          tooltip("Re-run previous selection?", placement = "right")
+      ),
       input_dark_mode(id = "sqlviewer_color_mode")
       ),
     tbl_preview_UI("tbl_preview")

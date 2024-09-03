@@ -58,6 +58,9 @@ no new queries will be created. To see result for chosen query, click on its nam
 To copy query - click copy button - and to remove query, click remove button.
 When query is removed, it is also copied to clipboard.
 
+As said above, app will insert queries only if content of clipboard changed from previous insertion, but
+if one would like to re-run the same selection as before, then on top of the app is a button for this.
+
 Each query is run in separate process using \verb{[shiny::ExtendedTask]} and when the query is running, app will not
 allow to re-run the same query with the one exception - if the query was re-inserted to the app (copy-pasted again
 to clipboard), then it will be possible to run this query - it will run in the new process, which means that previously
