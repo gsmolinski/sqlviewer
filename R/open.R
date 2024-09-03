@@ -5,6 +5,7 @@
 #'
 #' @param drv database driver passed to `[DBI::dbConnect()]`.
 #' @param ... other database driver arguments passed to `[DBI::dbConnect()]`. See that function for details.
+#' @param clipboard_mode `"web"` if `sqlviewer` will be used in web browser or `"local"` otherwise. Defaults to `"web"`. See *Details* section for details.
 #' @param app_host IPv4 address (character vector length 1) on which application should listen on. Defaults to `"127.0.0.1"` (localhost). Argument passed to `[shiny::shinyApp()]`.
 #' @param app_port TCP port (integer vector length 1) on which application should listen on. Defaults to `49152`. Argument passed to `[shiny::shinyApp()]`.
 #' @param launch_browser launch browser when app starts? Must be logical length 1. Defaults to `FALSE`. Argument passed to `[shiny::shinyApp()]`. Use `.rs.invokeShinyPaneViewer`
@@ -19,6 +20,11 @@
 #'
 #' To run app in parallel mode (each query will be run in separate process), call `[future::plan()]` with chosen strategy before
 #' calling `sqlviewer::open()`. See *Examples* and *App Functionality* sections for more details.
+#'
+#' `sqlviewer` can be start in two modes: using `clipr::read_clip()` and `clipr::write_clip()` to read from and write content back to clipboard or using JavaScript functions
+#' to read from and write to clipboard. JavaScript should be used if user opens `sqlviewer` in a web browser (even if this is local web browser and even
+#' without working Internet connection) - then `"web"` argument should be passed to `clipboard_mode` parameter.
+#' If `sqlviewer` will be used in different environment where JavaScript do not work (e.g. RStudio Viewer), `"local"` argument should be passed to `clipboard_mode` parameter.
 #'
 #' @section App Functionality:
 #' To insert query into app, copy-paste it to clipboard (it is possible to copy more than one query at a time, then more than one table will be displayed).
@@ -88,10 +94,16 @@
 #' # and see result.
 #' file.remove(temp_db)
 #' }
-open <- function(drv, ..., launch_browser = FALSE, app_host = "127.0.0.1", app_port = 49152) {
+open <- function(drv, ...,
+                 clipboard_mode = c("web", "local"),
+                 launch_browser = FALSE,
+                 app_host = "127.0.0.1",
+                 app_port = 49152) {
+
   if (!clipr::clipr_available()) {
     stop(clipr::dr_clipr(), call. = FALSE)
   }
+  clipboard_mode <- match.arg(clipboard_mode)
   dot_args <- list(...)
   # connection has to be evaluate in child process that's why we use expression instead of connection object
   conn <- parse(text = stringi::stri_c("connection <- DBI::dbConnect(drv = ",
@@ -103,7 +115,7 @@ open <- function(drv, ..., launch_browser = FALSE, app_host = "127.0.0.1", app_p
                                                               dot_args), collapse = ", "),
                                        ")"))
   shinyApp(set_ui(),
-           set_server(conn),
+           set_server(conn, clipboard_mode),
            options = list(launch.browser = launch_browser,
                           host = app_host,
                           port = app_port))

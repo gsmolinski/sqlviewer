@@ -7,6 +7,7 @@
 open(
   drv,
   ...,
+  clipboard_mode = c("web", "local"),
   launch_browser = FALSE,
   app_host = "127.0.0.1",
   app_port = 49152
@@ -16,6 +17,8 @@ open(
 \item{drv}{database driver passed to \verb{[DBI::dbConnect()]}.}
 
 \item{...}{other database driver arguments passed to \verb{[DBI::dbConnect()]}. See that function for details.}
+
+\item{clipboard_mode}{\code{"web"} if \code{sqlviewer} will be used in web browser or \code{"local"} otherwise. Defaults to \code{"web"}. See \emph{Details} section for details.}
 
 \item{launch_browser}{launch browser when app starts? Must be logical length 1. Defaults to \code{FALSE}. Argument passed to \verb{[shiny::shinyApp()]}. Use \code{.rs.invokeShinyPaneViewer}
 object as an argument to open in RStudio Viewer.}
@@ -37,6 +40,11 @@ preview SQL queries and construct complex queries using solution inspired by pip
 
 To run app in parallel mode (each query will be run in separate process), call \verb{[future::plan()]} with chosen strategy before
 calling \code{sqlviewer::open()}. See \emph{Examples} and \emph{App Functionality} sections for more details.
+
+\code{sqlviewer} can be start in two modes: using \code{clipr::read_clip()} and \code{clipr::write_clip()} to read from and write content back to clipboard or using JavaScript functions
+to read from and write to clipboard. JavaScript should be used if user opens \code{sqlviewer} in a web browser (even if this is local web browser and even
+without working Internet connection) - then \code{"web"} argument should be passed to \code{clipboard_mode} parameter.
+If \code{sqlviewer} will be used in different environment where JavaScript do not work (e.g. RStudio Viewer), \code{"local"} argument should be passed to \code{clipboard_mode} parameter.
 }
 \section{App Functionality}{
 

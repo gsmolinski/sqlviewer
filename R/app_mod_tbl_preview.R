@@ -16,7 +16,9 @@ tbl_preview_UI <- function(id) {
 #'
 #' @param id module id.
 #' @param conn connection to database.
+#' @param clipboard_mode should we use clipr::write_clipboard or JS to write to clipboard?
 #' @param observe_clipboard reactive input TRUE/FALSE: should we observe clipboard?
+#' @param js_clipboard clipboard content read by JS function.
 #' @param copy_query input from JS - query name copied by user.
 #' @param remove_query input from JS - query name to remove chosen by user.
 #' @param show_result input from JS - query name for which to show result.
@@ -25,7 +27,7 @@ tbl_preview_UI <- function(id) {
 #' @return
 #' server function.
 #' @noRd
-tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_query, show_result, hide_result) {
+tbl_preview_server <- function(id, conn, clipboard_mode, observe_clipboard, js_clipboard, copy_query, remove_query, show_result, hide_result) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -39,7 +41,16 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
       observe({
         invalidateLater(500)
         req(observe_clipboard())
-        current_content <- req(suppressWarnings(clipr::read_clip(allow_non_interactive = TRUE))) # suppress warning if no content in clipboard
+        if (clipboard_mode == "web") {
+          session$sendCustomMessage("read_from_clipboard", "placeholder")
+          current_content <- unlist(isolate(js_clipboard()))
+          current_content <- stringi::stri_replace_all_fixed(current_content, "\r", "")
+          current_content <- stringi::stri_split_fixed(current_content, "\n")
+        } else if (clipboard_mode == "local") {
+          current_content <- suppressWarnings(clipr::read_clip(allow_non_interactive = TRUE)) # suppress warning if no content in clipboard
+        }
+        current_content <- unlist(current_content)
+        req(current_content)
         req(prepare_content_to_evaluate(current_content))
         clipboard(current_content)
       })
@@ -95,8 +106,13 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         bindEvent(show_result())
 
       observe({
-        clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[copy_query()]]$query, "^--", "-- |"),
-                          allow_non_interactive = TRUE)
+        if (clipboard_mode == "web") {
+          session$sendCustomMessage("copy_to_clipboard",
+                                    stringi::stri_replace_all_regex(queries[["elements"]][[copy_query()]]$query, "^--", "-- |"))
+        } else if (clipboard_mode == "local") {
+          clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[copy_query()]]$query, "^--", "-- |"),
+                            allow_non_interactive = TRUE)
+        }
       }) |>
         bindEvent(copy_query())
 
@@ -106,14 +122,16 @@ tbl_preview_server <- function(id, conn, observe_clipboard, copy_query, remove_q
         # and this is not something user is expecting - so we really need to write something to clipboard
         # what will be not correct sql statement accepted by sqlviewer - and let's say that we can "sell"
         # this as a feature - user removes query and as a backup we write to the clipboard this query.
-        clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[remove_query()]]$query, "^--", "-- |"),
-                          allow_non_interactive = TRUE)
+        if (clipboard_mode == "web") {
+          session$sendCustomMessage("copy_to_clipboard",
+                                    stringi::stri_replace_all_regex(queries[["elements"]][[remove_query()]]$query, "^--", "-- |"))
+        } else if (clipboard_mode == "local") {
+          clipr::write_clip(stringi::stri_replace_all_regex(queries[["elements"]][[remove_query()]]$query, "^--", "-- |"),
+                            allow_non_interactive = TRUE)
+        }
         remove_extended_task_fun(remove_query(), main_mod_envir)
         queries_tbl(remove_chosen_existing_queries(remove_query(), queries_tbl()))
         rm_ui_output_reactive(remove_query(), queries, session, output) # now remove as user wants
-        # this is necessary, because otherwise queries are not displayed again if user rerun the same batch of queries
-        # as were before in clipboard
-        clipboard(NULL)
       }) |>
         bindEvent(remove_query())
 
@@ -300,8 +318,6 @@ display_tbl <- function(tbl_data, color_theme) {
 }
 
 #' Set Theme For `reactable` Table
-#'
-#' @param color_mode light or dark mode.
 #'
 #' @return
 #' reactable object to set theme for table.

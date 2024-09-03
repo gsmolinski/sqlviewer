@@ -25,11 +25,13 @@
       ]
     },
     "tbl_preview-tbl_test2_result": {
-      "message": "",
-      "call": "NULL",
-      "type": [
-        "shiny.silent.error",
-        "validation"
+      "x": null,
+      "evals": [
+
+      ],
+      "jsHooks": null,
+      "deps": [
+
       ]
     },
     "tbl_preview-tbl_test4": {
@@ -41,11 +43,13 @@
       ]
     },
     "tbl_preview-tbl_test4_result": {
-      "message": "",
-      "call": "NULL",
-      "type": [
-        "shiny.silent.error",
-        "validation"
+      "x": null,
+      "evals": [
+
+      ],
+      "jsHooks": null,
+      "deps": [
+
       ]
     },
     "tbl_preview-tbl_test5": {
