@@ -100,10 +100,12 @@ open <- function(drv, ...,
                  app_host = "127.0.0.1",
                  app_port = 49152) {
 
-  if (!clipr::clipr_available()) {
-    stop(clipr::dr_clipr(), call. = FALSE)
-  }
   clipboard_mode <- match.arg(clipboard_mode)
+  if (clipboard_mode == "local") {
+    if (!clipr::clipr_available()) {
+      stop(clipr::dr_clipr(), call. = FALSE)
+    }
+  }
   dot_args <- list(...)
   # connection has to be evaluate in child process that's why we use expression instead of connection object
   conn <- parse(text = stringi::stri_c("connection <- DBI::dbConnect(drv = ",

@@ -3,7 +3,7 @@ conn <- DBI::dbConnect(RSQLite::SQLite(), dbname = temp_db)
 DBI::dbWriteTable(conn, "iris", iris)
 DBI::dbDisconnect(conn)
 connection <- parse(text = paste0("connection <- DBI::dbConnect(RSQLite::SQLite(), dbname = ", "'", temp_db, "')"))
-shiny_app_obj <- shinyApp(set_ui(), set_server(connection, "web"))
+shiny_app_obj <- shinyApp(set_ui(), set_server(connection, "local"))
 
 test_that("app displays correct output when queries are copied to clipboard", {
   skip_on_cran()
