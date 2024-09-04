@@ -19,6 +19,7 @@ Imports:
     clipr,
     data.table,
     DBI,
+    future,
     htmltools,
     htmlwidgets,
     igraph,
@@ -28,7 +29,6 @@ Imports:
     stringi
 Suggests: 
     fs,
-    future,
     RSQLite,
     shinytest2,
     testthat (>= 3.0.0)

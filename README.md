@@ -76,8 +76,6 @@ because the app was developed to enable parallelization, before running
 app, we can run `{future}` plan.
 
 ``` r
-# install.packages("future") # run if package not installed already
-
 future::plan("multisession") # enable parallel mode
 sqlviewer::open(RSQLite::SQLite(), dbname = temp_db) # run 'sqlviewer' app against temporary database
 ```
