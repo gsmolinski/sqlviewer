@@ -110,11 +110,11 @@ What is important here is to note that in `sqlviewer` two modes to read
 from or write back (queries with resolved piped queries) to clipboard
 are possible, using `clipr::write_clip()` and `clipr::read_clip()` or
 JavaScript functions. JavaScript should be used in any web-based
-environment (opening app in the web browser, starting app in the RStudio
-Server etc.), while `clipr` functions should be used where JavaScript do
-not work. One example of not working JavaScript function is opening app
-in the local (desktop) RStudio Viewer, so to use `sqlviewer` in the
-viewer locally, we need to change two parameters:
+environment (like opening app in the web browser), while `clipr`
+functions should be used where JavaScript do not work. One example of
+not working JavaScript function is opening app in the local (desktop)
+RStudio Viewer, so to use `sqlviewer` in the viewer locally, we need to
+change two parameters:
 
 ``` r
 sqlviewer::open(RSQLite::SQLite(), dbname = temp_db, clipboard_mode = "local", launch_browser = .rs.invokeShinyPaneViewer)
