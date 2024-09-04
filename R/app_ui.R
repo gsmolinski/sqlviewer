@@ -23,7 +23,7 @@ set_ui <- function() {
       htmltools::tags$div(id = "div_rerun",
         actionButton("rerun", NULL, icon = icon("repeat", class = "solid")) |>
           tagAppendAttributes(class = "btn-sm") |>
-          tooltip("Re-run previous selection?", placement = "right")
+          tooltip("Re-run previous selection", placement = "right")
       ),
       input_dark_mode(id = "sqlviewer_color_mode")
       ),
